@@ -1,0 +1,262 @@
+/* Kiwix Onboarding Custom Styling & Design System */
+
+:root {
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+  --color-accent-light: rgba(59, 130, 246, 0.15);
+  --color-accent-glow: rgba(59, 130, 246, 0.35);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --transition-speed: 0.25s;
+}
+
+/* Base resets & typography */
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+
+/* Light Theme Variables */
+body.light-theme {
+  --bg-primary: #f1f5f9;      /* Soft light gray (not pure white) */
+  --bg-surface: #ffffff;      /* Card surface */
+  --bg-surface-alt: #f8fafc;  /* Elevated or secondary surface */
+  --bg-input: #ffffff;
+  --border-color: #e2e8f0;    /* Crisp subtle gray border */
+  --border-focus: #3b82f6;
+  --text-primary: #0f172a;    /* Dark charcoal/black */
+  --text-secondary: #475569;  /* Muted slate */
+  --text-muted: #64748b;
+  --card-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -2px rgba(15, 23, 42, 0.03);
+  --card-hover-shadow: 0 12px 24px -4px rgba(59, 130, 246, 0.12), 0 4px 8px -2px rgba(15, 23, 42, 0.05);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Dark Theme Variables */
+body.dark-theme {
+  --bg-primary: #090e17;      /* Deep dark black/charcoal */
+  --bg-surface: #131c2e;      /* Rich dark slate card */
+  --bg-surface-alt: #1b263b;  /* Elevated card */
+  --bg-input: #101726;
+  --border-color: #233148;    /* Dark slate border */
+  --border-focus: #3b82f6;
+  --text-primary: #f8fafc;    /* Crisp light white */
+  --text-secondary: #cbd5e1;  /* Soft slate */
+  --text-muted: #94a3b8;
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  --card-hover-shadow: 0 12px 28px -4px rgba(59, 130, 246, 0.22), 0 4px 12px -2px rgba(0, 0, 0, 0.35);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Custom card container utility */
+.kiwix-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kiwix-card:hover {
+  box-shadow: var(--card-hover-shadow);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+/* Selected state for cards & interest pills */
+.kiwix-card-selected {
+  border-color: #3b82f6 !important;
+  background-color: var(--bg-surface-alt) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4), var(--card-shadow);
+}
+
+/* Accent Glows & Buttons */
+.btn-accent {
+  background-color: #3b82f6;
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.btn-accent:hover:not(:disabled) {
+  background-color: #2563eb;
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+  transform: translateY(-1px);
+}
+
+.btn-accent:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-accent:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Stepper styles */
+.stepper-item {
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.stepper-circle {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+/* Progress bar stripe animation */
+@keyframes progress-stripe {
+  0% {
+    background-position: 1rem 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+.animate-stripes {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+  animation: progress-stripe 1s linear infinite;
+}
+
+/* Pulse badge */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.pulse-badge {
+  animation: pulse-ring 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb {
+  background-color: #26344d;
+  border-radius: 4px;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb:hover {
+  background-color: #3b82f6;
+}
+
+body.light-theme ::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+body.light-theme ::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* Animations for step transitions */
+.step-fade-in {
+  animation: stepFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes stepFade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Toast notifications */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 420px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: all 0.2s ease;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Confetti particle for celebration */
+.confetti-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: confettiFall 2.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes confettiFall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(350px) rotate(720deg);
+  }
+}

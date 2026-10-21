@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - Kiwix Onboarding</title>
+  <meta name="description" content="Create a Kiwix Onboarding account to personalize your offline knowledge library.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Styles for Themes, Micro-animations, & Component Tokens -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Authentication Script -->
+  <script src="js/auth.js"></script>
+  <script>
+    // Redirect already logged-in users directly to Onboarding
+    KiwixAuth.redirectIfAuthenticated();
+  </script>
+</head>
+<body class="h-full flex flex-col justify-between dark-theme transition-colors duration-200">
+
+  <!-- Header Navigation -->
+  <header class="w-full border-b backdrop-blur-md sticky top-0 z-40 transition-colors duration-200" style="background-color: var(--bg-surface); border-color: var(--border-color);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Logo -->
+      <a href="index.html" class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/30">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            <circle cx="12" cy="10" r="3"/>
+            <path d="m14 12 2 2"/>
+          </svg>
+        </div>
+        <div>
+          <span class="font-bold text-base tracking-tight" style="color: var(--text-primary)">Kiwix</span>
+          <span class="text-[10px] font-semibold ml-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">Onboarding</span>
+        </div>
+      </a>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center space-x-3">
+        <!-- Theme Toggle -->
+        <button id="theme-toggle-btn" class="p-2 rounded-lg border transition-all hover:border-blue-500" style="background-color: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary)" title="Toggle Theme">
+          <svg id="icon-sun" class="w-4 h-4 hidden text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5"></circle>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+          </svg>
+          <svg id="icon-moon" class="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+          </svg>
+        </button>
+
+        <a href="signin.html" class="text-xs font-semibold hover:underline" style="color: var(--text-muted)">
+          Sign In
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Sign Up Form Card Area -->
+  <main class="flex-1 flex items-center justify-center p-4 sm:p-6">
+    <div class="w-full max-w-md kiwix-card rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl relative overflow-hidden">
+      
+      <!-- Ambient glow -->
+      <div class="absolute -top-16 -right-16 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+      <!-- Card Header -->
+      <div class="text-center space-y-1">
+        <h1 class="text-2xl font-bold tracking-tight" style="color: var(--text-primary)">
+          Create Your Account
+        </h1>
+        <p class="text-xs" style="color: var(--text-secondary)">
+          Set up your offline knowledge profile to personalize package downloads.
+        </p>
+      </div>
+
+      <!-- Error Alert Banner -->
+      <div id="signup-error-banner" class="hidden p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs flex items-center space-x-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <span id="signup-error-msg">Please enter valid registration details.</span>
+      </div>
+
+      <!-- Registration Form -->
+      <form id="signup-form" class="space-y-4">
+        
+        <!-- Full Name -->
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color: var(--text-primary)">Full Name *</label>
+          <input type="text" id="signup-name" required placeholder="e.g. Samridhi Parashar" class="w-full px-3.5 py-2 text-xs rounded-xl border focus:outline-none focus:border-blue-500" style="background-color: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary)">
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color: var(--text-primary)">Email Address *</label>
+          <input type="email" id="signup-email" required placeholder="name@example.com" class="w-full px-3.5 py-2 text-xs rounded-xl border focus:outline-none focus:border-blue-500" style="background-color: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary)">
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color: var(--text-primary)">Password (Min 6 characters) *</label>
+          <input type="password" id="signup-password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2 text-xs rounded-xl border focus:outline-none focus:border-blue-500" style="background-color: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary)">
+        </div>
+
+        <!-- Confirm Password -->
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color: var(--text-primary)">Confirm Password *</label>
+          <input type="password" id="signup-confirm-password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2 text-xs rounded-xl border focus:outline-none focus:border-blue-500" style="background-color: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary)">
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="btn-submit-signup" class="btn-accent w-full py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-1.5 mt-2">
+          <span>Create Account & Start Onboarding</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </button>
+
+      </form>
+
+      <!-- Bottom Card Switcher -->
+      <div class="pt-4 border-t text-center text-xs" style="border-color: var(--border-color); color: var(--text-secondary)">
+        <span>Already have an account?</span>
+        <a href="signin.html" class="text-blue-500 font-semibold hover:underline ml-1">
+          Sign In
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-4 text-center text-xs" style="color: var(--text-muted)">
+    <p>Kiwix Onboarding • Zero-Cloud Offline Knowledge Experience</p>
+  </footer>
+
+  <script>
+    const form = document.getElementById('signup-form');
+    const nameInput = document.getElementById('signup-name');
+    const emailInput = document.getElementById('signup-email');
+    const passInput = document.getElementById('signup-password');
+    const confirmInput = document.getElementById('signup-confirm-password');
+    const errorBanner = document.getElementById('signup-error-banner');
+    const errorMsg = document.getElementById('signup-error-msg');
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorBanner.classList.remove('hidden');
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      errorBanner.classList.add('hidden');
+
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passInput.value;
+      const confirmPassword = confirmInput.value;
+
+      if (!name || !email || !password) {
+        showError('Please complete all required fields.');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showError('Passwords do not match. Please re-enter carefully.');
+        return;
+      }
+
+      if (password.length < 6) {
+        showError('Password must be at least 6 characters long.');
+        return;
+      }
+
+      const res = KiwixAuth.signUpUser(name, email, password);
+      if (res.success) {
+        // Redirect to Onboarding
+        window.location.href = 'onboarding.html';
+      } else {
+        showError(res.error || 'Failed to create account.');
+      }
+    });
+  </script>
+
+</body>
+</html>

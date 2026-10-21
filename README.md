@@ -94,3 +94,20 @@ Designed specifically for **maximum execution speed, zero build overhead, and pu
 ## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for complete details.
+
+
+
+
+
+
+dark theam :
+Main color: Dark black / charcoal (not white)
+Accent: Bright blue
+Text: Light gray / white
+Cards: Dark gray
+
+light theam :
+Main colour: Soft light gray (not white)
+Cards also in gray tones
+Bright blue accents kept
+Black/dark text

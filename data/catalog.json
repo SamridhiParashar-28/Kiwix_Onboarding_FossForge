@@ -1,0 +1,400 @@
+[
+  {
+    "id": "wikimed-en",
+    "name": "WikiMed - The Healthcare Encyclopedia",
+    "filename": "wikimed_en_all_maxi_2024-03.zim",
+    "description": "Comprehensive offline medical encyclopedia covering diseases, anatomy, surgery, pharmacology, and sanitation. Verified by health professionals.",
+    "category": "health",
+    "categoryLabel": "Health & Medicine",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 1840,
+    "articlesCount": 54200,
+    "icon": "activity",
+    "featured": true,
+    "tags": ["medicine", "health", "clinical", "emergency", "anatomy"],
+    "sampleArticles": [
+      {
+        "title": "Cardiopulmonary Resuscitation (CPR)",
+        "snippet": "Cardiopulmonary resuscitation is an emergency procedure that combines chest compressions often with artificial ventilation in an effort to manually preserve intact brain function until further measures are taken."
+      },
+      {
+        "title": "Emergency Wound Care & Antiseptics",
+        "snippet": "First response wound management principles: irrigation with clean water, control of arterial bleeding, and prevention of secondary bacterial infection."
+      }
+    ]
+  },
+  {
+    "id": "swasthya-hi",
+    "name": "स्वास्थ्य एवं प्राथमिक चिकित्सा (Swasthya)",
+    "filename": "swasthya_hi_all_maxi_2024-01.zim",
+    "description": "हिंदी में व्यापक स्वास्थ्य, प्राथमिक उपचार, मातृ-शिशु देखभाल और पोषण मार्गदर्शिका।",
+    "category": "health",
+    "categoryLabel": "Health & Medicine",
+    "language": "hi",
+    "languageLabel": "हिन्दी (Hindi)",
+    "sizeMB": 420,
+    "articlesCount": 12800,
+    "icon": "heart-pulse",
+    "featured": true,
+    "tags": ["स्वास्थ्य", "चिकित्सा", "प्राथमिक उपचार", "पोषण"],
+    "sampleArticles": [
+      {
+        "title": "प्राथमिक चिकित्सा के मूलभूत नियम",
+        "snippet": "आपातकालीन स्थिति में मरीज की श्वसन प्रणाली, रक्तचाप और नब्ज की जांच के साथ त्वरित प्राथमिक उपचार प्रक्रिया।"
+      },
+      {
+        "title": "स्वच्छ जल एवं संक्रामक रोग नियंत्रण",
+        "snippet": "ग्रामीण एवं दूरस्थ क्षेत्रों में जल जनित बीमारियों जैसे हैजा, टाइफाइड से बचाव के उपाय।"
+      }
+    ]
+  },
+  {
+    "id": "disaster-prep-en",
+    "name": "Disaster Preparedness & Survival Handbook",
+    "filename": "disaster_preparedness_en_2024.zim",
+    "description": "Off-grid survival protocols, earthquake/flood readiness, clean water purification, emergency signaling, and crisis triage.",
+    "category": "disaster",
+    "categoryLabel": "Disaster Preparedness",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 360,
+    "articlesCount": 4200,
+    "icon": "shield-alert",
+    "featured": true,
+    "tags": ["survival", "disaster", "emergency", "flood", "earthquake"],
+    "sampleArticles": [
+      {
+        "title": "Solar Water Disinfection (SODIS) Method",
+        "snippet": "SODIS uses PET bottles exposed to sunlight for 6 hours to eliminate 99.9% of bacterial pathogens in drinking water."
+      },
+      {
+        "title": "Emergency Go-Bag Checklist (72-Hour Survival)",
+        "snippet": "Essential items for immediate evacuation: water ration, emergency blanket, wind-up radio, non-perishable food, and multi-tool."
+      }
+    ]
+  },
+  {
+    "id": "aapda-prabandhan-hi",
+    "name": "आपदा प्रबंधन एवं राहत मार्गदर्शिका",
+    "filename": "aapda_prabandhan_hi_2024.zim",
+    "description": "बाढ़, भूकंप, चक्रवात और महामारी जैसी प्राकृतिक आपदाओं से बचाव व राहत कार्य का संपूर्ण संदर्भ संग्रह।",
+    "category": "disaster",
+    "categoryLabel": "Disaster Preparedness",
+    "language": "hi",
+    "languageLabel": "हिन्दी (Hindi)",
+    "sizeMB": 210,
+    "articlesCount": 3100,
+    "icon": "life-buoy",
+    "featured": false,
+    "tags": ["आपदा", "सुरक्षा", "राहत", "बाढ़", "भूकंप"],
+    "sampleArticles": [
+      {
+        "title": "भूकंप के दौरान सुरक्षा उपाय",
+        "snippet": "Drop, Cover, and Hold On (झुको, ढंको और पकड़ो) तकनीक द्वारा जान-माल की रक्षा।"
+      }
+    ]
+  },
+  {
+    "id": "wikipedia-vital-en",
+    "name": "Wikipedia Mini - 10,000 Vital Articles",
+    "filename": "wikipedia_en_10000_vital_2024.zim",
+    "description": "A curated high-density offline selection of humanity's most important 10,000 Wikipedia articles with illustrated diagrams.",
+    "category": "wikipedia",
+    "categoryLabel": "Wikipedia",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 880,
+    "articlesCount": 10000,
+    "icon": "book-open",
+    "featured": true,
+    "tags": ["encyclopedia", "vital", "reference", "knowledge"],
+    "sampleArticles": [
+      {
+        "title": "Renewable Energy Technologies",
+        "snippet": "Overview of photovoltaic solar conversion, wind turbine kinetics, and grid-scale electrochemical storage systems."
+      },
+      {
+        "title": "Scientific Method & Empirical Research",
+        "snippet": "The systematic observation, measurement, and experimentation underpinning modern scientific discovery."
+      }
+    ]
+  },
+  {
+    "id": "wikipedia-top-en",
+    "name": "Wikipedia Top 100k Articles (Illustrated)",
+    "filename": "wikipedia_en_top100k_maxi_2024.zim",
+    "description": "The 100,000 most frequently visited Wikipedia articles with high-resolution thumbnail images, covering global human knowledge.",
+    "category": "wikipedia",
+    "categoryLabel": "Wikipedia",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 4200,
+    "articlesCount": 100000,
+    "icon": "globe",
+    "featured": true,
+    "tags": ["wikipedia", "general", "encyclopedia", "top"],
+    "sampleArticles": [
+      {
+        "title": "Quantum Mechanics & Wave-Particle Duality",
+        "snippet": "Fundamental theory in physics describing physical properties of nature on an atomic scale."
+      }
+    ]
+  },
+  {
+    "id": "wikipedia-hi",
+    "name": "विकिपीडिया संपूर्ण हिंदी संग्रह (Hindi Wikipedia)",
+    "filename": "wikipedia_hi_all_maxi_2024.zim",
+    "description": "हिंदी विकिपीडिया के 150,000 से अधिक लेखों का संपूर्ण संग्रह—इतिहास, विज्ञान, भूगोल, और संस्कृति।",
+    "category": "wikipedia",
+    "categoryLabel": "Wikipedia",
+    "language": "hi",
+    "languageLabel": "हिन्दी (Hindi)",
+    "sizeMB": 1450,
+    "articlesCount": 155000,
+    "icon": "book-open-check",
+    "featured": true,
+    "tags": ["विकिपीडिया", "ज्ञानकोश", "हिंदी"],
+    "sampleArticles": [
+      {
+        "title": "भारत का संविधान एवं मूल अधिकार",
+        "snippet": "भारतीय संविधान के अनुच्छेद 12 से 35 तक वर्णित छह मौलिक अधिकार और उनके संवैधानिक उपचार।"
+      }
+    ]
+  },
+  {
+    "id": "phet-sims-en",
+    "name": "PhET Interactive Science Simulations",
+    "filename": "phet_en_interactive_2024.zim",
+    "description": "Over 100 interactive Nobel-prize winning physics, chemistry, biology, and math simulations. Fully runnable offline.",
+    "category": "science",
+    "categoryLabel": "Science & Technology",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 680,
+    "articlesCount": 125,
+    "icon": "atom",
+    "featured": true,
+    "tags": ["physics", "simulation", "chemistry", "stem", "interactive"],
+    "sampleArticles": [
+      {
+        "title": "Circuit Construction Kit (DC & AC)",
+        "snippet": "Interactive schematic breadboard simulator allowing users to test Ohm's Law and parallel circuits."
+      }
+    ]
+  },
+  {
+    "id": "khan-academy-stem",
+    "name": "Khan Academy - Core STEM Curricula",
+    "filename": "khanacademy_en_stem_2024.zim",
+    "description": "Comprehensive self-paced courses in Algebra, Calculus, Physics, Organic Chemistry, and Biology with practice exercises.",
+    "category": "science",
+    "categoryLabel": "Science & Technology",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 2200,
+    "articlesCount": 4800,
+    "icon": "flask-conical",
+    "featured": false,
+    "tags": ["stem", "math", "physics", "khan academy", "learning"],
+    "sampleArticles": [
+      {
+        "title": "Calculus: Limits and Derivatives",
+        "snippet": "Geometric intuition behind instantaneous rates of change and tangent lines."
+      }
+    ]
+  },
+  {
+    "id": "devdocs-tech",
+    "name": "DevDocs - Software & Web API Reference",
+    "filename": "devdocs_en_software_complete_2024.zim",
+    "description": "Instant offline documentation for JavaScript, Python, Rust, Go, HTML5, CSS3, Docker, Git, and Linux APIs.",
+    "category": "tech",
+    "categoryLabel": "Coding & Development",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 620,
+    "articlesCount": 42000,
+    "icon": "terminal",
+    "featured": true,
+    "tags": ["programming", "developer", "javascript", "python", "docs"],
+    "sampleArticles": [
+      {
+        "title": "Modern JavaScript (ES6+): Promises & Async/Await",
+        "snippet": "Asynchronous event handling, microtask queues, and concurrency patterns in JavaScript engines."
+      },
+      {
+        "title": "Python 3: Standard Library & Concurrency",
+        "snippet": "In-depth guide to asyncio, multiprocessing, collections, and typing modules."
+      }
+    ]
+  },
+  {
+    "id": "stackoverflow-curated",
+    "name": "Stack Overflow - Selected Top Answers",
+    "filename": "stackoverflow_en_top_2024.zim",
+    "description": "Curated database of the top 150,000 highly voted programming solutions, algorithm discussions, and bug workarounds.",
+    "category": "tech",
+    "categoryLabel": "Coding & Development",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 2400,
+    "articlesCount": 150000,
+    "icon": "code",
+    "featured": false,
+    "tags": ["coding", "debugging", "stack overflow", "algorithms"],
+    "sampleArticles": [
+      {
+        "title": "How do I undo the most recent local commits in Git?",
+        "snippet": "Comprehensive explanation of git reset --soft, git reset --hard, and recovering HEAD with reflog."
+      }
+    ]
+  },
+  {
+    "id": "gutenberg-classics",
+    "name": "Project Gutenberg - 1,000 Greatest Classics",
+    "filename": "gutenberg_en_top1000_2024.zim",
+    "description": "Timeless literary masterpieces, philosophy, poetry, and foundational world literature in searchable offline format.",
+    "category": "education",
+    "categoryLabel": "Education & Literature",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 720,
+    "articlesCount": 1000,
+    "icon": "feather",
+    "featured": false,
+    "tags": ["books", "literature", "philosophy", "gutenberg"],
+    "sampleArticles": [
+      {
+        "title": "Plato's Republic (Benjamin Jowett Translation)",
+        "snippet": "Socratic dialogue concerning justice, the order and character of the just city-state, and the just human."
+      }
+    ]
+  },
+  {
+    "id": "world-history-en",
+    "name": "World History Encyclopedia Archive",
+    "filename": "worldhistory_en_complete_2024.zim",
+    "description": "Scholarly, verified chronicles of ancient civilizations, Mesopotamia, Rome, Silk Road, Indus Valley, and modern eras.",
+    "category": "history",
+    "categoryLabel": "History & Culture",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 1250,
+    "articlesCount": 8500,
+    "icon": "landmark",
+    "featured": true,
+    "tags": ["history", "civilization", "archaeology", "ancient"],
+    "sampleArticles": [
+      {
+        "title": "The Indus Valley Civilization (Harappa & Mohenjo-daro)",
+        "snippet": "Urban planning, standardized weights, advanced drainage networks, and bronze metallurgy in Bronze Age South Asia."
+      }
+    ]
+  },
+  {
+    "id": "bharat-itihas-hi",
+    "name": "भारतीय इतिहास एवं स्वतंत्रता संग्राम",
+    "filename": "bharat_itihas_hi_2024.zim",
+    "description": "प्राचीन भारत, मध्यकालीन युग और भारतीय स्वतंत्रता संग्राम का संपूर्ण प्रामाणिक इतिहास।",
+    "category": "history",
+    "categoryLabel": "History & Culture",
+    "language": "hi",
+    "languageLabel": "हिन्दी (Hindi)",
+    "sizeMB": 520,
+    "articlesCount": 6400,
+    "icon": "scroll",
+    "featured": false,
+    "tags": ["इतिहास", "भारत", "संस्कृति", "स्वतंत्रता"],
+    "sampleArticles": [
+      {
+        "title": "मौर्य साम्राज्य और सम्राट अशोक का धम्म",
+        "snippet": "कलिंग युद्ध के उपरांत सम्राट अशोक द्वारा बौद्ध धर्म का अंगीकरण और शांति का संदेश।"
+      }
+    ]
+  },
+  {
+    "id": "wikivoyage-global",
+    "name": "Wikivoyage - Global Travel & Regional Guide",
+    "filename": "wikivoyage_en_all_2024.zim",
+    "description": "Detailed offline travel maps, culture guides, local customs, emergency transit routes, and regional advisories.",
+    "category": "education",
+    "categoryLabel": "Education & Literature",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 480,
+    "articlesCount": 31000,
+    "icon": "compass",
+    "featured": false,
+    "tags": ["travel", "geography", "maps", "culture"],
+    "sampleArticles": [
+      {
+        "title": "Himalayan High-Altitude Trekking Protocols",
+        "snippet": "Acclimatization schedules, acute mountain sickness prevention, and route planning for remote valleys."
+      }
+    ]
+  },
+  {
+    "id": "wikimed-es",
+    "name": "WikiMed Español - Enciclopedia Médica",
+    "filename": "wikimed_es_all_maxi_2024.zim",
+    "description": "Enciclopedia médica completa en español con más de 35,000 artículos sobre salud, diagnóstico y prevención.",
+    "category": "health",
+    "categoryLabel": "Health & Medicine",
+    "language": "es",
+    "languageLabel": "Español (Spanish)",
+    "sizeMB": 1200,
+    "articlesCount": 35000,
+    "icon": "heart-pulse",
+    "featured": false,
+    "tags": ["medicina", "salud", "primeros auxilios"],
+    "sampleArticles": [
+      {
+        "title": "Protocolo de Primeros Auxilios para Quemaduras",
+        "snippet": "Manejo de quemaduras de primer y segundo grado: enfriamiento con agua tibia y vendaje estéril no adherente."
+      }
+    ]
+  },
+  {
+    "id": "wikimed-fr",
+    "name": "WikiMed Français - Encyclopédie Médicale",
+    "filename": "wikimed_fr_all_maxi_2024.zim",
+    "description": "L'encyclopédie médicale hors ligne de référence en français pour les professionnels de santé et le grand public.",
+    "category": "health",
+    "categoryLabel": "Health & Medicine",
+    "language": "fr",
+    "languageLabel": "Français (French)",
+    "sizeMB": 1150,
+    "articlesCount": 33000,
+    "icon": "activity",
+    "featured": false,
+    "tags": ["médecine", "santé", "secourisme"],
+    "sampleArticles": [
+      {
+        "title": "Gestion d'Urgence des Traumatismes",
+        "snippet": "Stabilisation rachidienne, évaluation de l'état de conscience et hémostase d'urgence."
+      }
+    ]
+  },
+  {
+    "id": "ted-ed-knowledge",
+    "name": "TED-Ed Knowledge Digest",
+    "filename": "ted_ed_en_knowledge_2024.zim",
+    "description": "Illustrated lessons and explanations answering profound questions across nature, astrophysics, and psychology.",
+    "category": "education",
+    "categoryLabel": "Education & Literature",
+    "language": "en",
+    "languageLabel": "English",
+    "sizeMB": 950,
+    "articlesCount": 1100,
+    "icon": "lightbulb",
+    "featured": false,
+    "tags": ["ted", "education", "ideas", "science"],
+    "sampleArticles": [
+      {
+        "title": "How the Human Immune System Remembers Pathogens",
+        "snippet": "The role of memory B cells and T cells in adaptive immunity and lifelong disease resistance."
+      }
+    ]
+  }
+]
