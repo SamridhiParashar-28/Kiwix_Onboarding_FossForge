@@ -16,6 +16,13 @@
 - [Solution Overview](#solution-overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
+- [Quick Start & Running Locally](#quick-start--running-locally)
+- [Optional FastAPI Backend Service](#optional-fastapi-backend-service)
+- [Testing & Verification](#testing--verification)
+- [Documentation & Guides](#documentation--guides)
+  - [User & Developer Guide](docs/USER_AND_DEVELOPER_GUIDE.md)
+  - [Project Status Report & Future Roadmap](docs/PROJECT_REPORT.md)
+  - [Implementation History Log](docs/IMPLEMENTATION_HISTORY.md)
 - [Team](#team)
 - [Acknowledgments](#acknowledgments)
 - [License](#license)
@@ -76,6 +83,69 @@ Designed specifically for **maximum execution speed, zero build overhead, and pu
 
 ---
 
+---
+
+## Quick Start & Running Locally
+
+### Option 1: 1-Click Launch (Windows)
+Double-click `launch.bat` (or `start.bat`) to automatically start the local server and open the application in your default browser at `http://localhost:3000`.
+
+### Option 2: Python Static Server
+```bash
+python -m http.server 3000
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Option 3: Node.js Static Server
+```bash
+npx -y serve -l 3000
+```
+
+### Option 4: Direct Offline File (Zero Build / Zero Dependencies)
+Open `index.html` directly in any modern browser (`file:///path/to/index.html`). The embedded catalog (`js/catalog-data.js`) guarantees 100% offline availability without needing an HTTP server.
+
+---
+
+## Optional FastAPI Backend Service
+
+The application is local-first and functions autonomously without any running backend. For catalog schema validation, host disk space queries, and SHA-256 package verification, you can optionally launch the FastAPI microservice:
+
+### Install Backend Dependencies
+```bash
+pip install -r backend/requirements.txt
+```
+
+### Run FastAPI Backend
+```bash
+# Option A: Helper script (Windows)
+launch_backend.bat
+
+# Option B: Direct uvicorn command
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+
+- API Health Check: [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health)
+- Interactive API Docs (Swagger UI): [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- Validated ZIM Catalog: [http://127.0.0.1:8000/api/catalog](http://127.0.0.1:8000/api/catalog)
+
+---
+
+## Testing & Verification
+
+### Run Backend Unit & Integration Tests (Python)
+```bash
+python -m unittest tests/test_backend.py
+```
+*Tests health checks, catalog integrity, package size/checksum verification, storage metrics, and CORS boundaries.*
+
+### Run Frontend Application Logic Tests (Node.js)
+```bash
+node --test tests/test_frontend_logic.js
+```
+*Tests catalog schemas, recommendation scoring algorithms, storage quota budgeting, download time calculations, and bounded exponential backoff.*
+
+---
+
 ## Team
 
 - **Samridhi Parashar** - [GitHub](https://github.com/SamridhiParashar-28)
@@ -94,20 +164,3 @@ Designed specifically for **maximum execution speed, zero build overhead, and pu
 ## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for complete details.
-
-
-
-
-
-
-dark theam :
-Main color: Dark black / charcoal (not white)
-Accent: Bright blue
-Text: Light gray / white
-Cards: Dark gray
-
-light theam :
-Main colour: Soft light gray (not white)
-Cards also in gray tones
-Bright blue accents kept
-Black/dark text

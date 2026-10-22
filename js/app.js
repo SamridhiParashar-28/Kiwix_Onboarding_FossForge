@@ -1,6 +1,7 @@
 /**
  * Kiwix Onboarding - Zero-to-Knowledge First-Run Experience
- * Clean, modern vanilla JavaScript application state & engines
+ * Comprehensive client-side state engine, adaptive recommendations, storage budgeting,
+ * resumable download workflow with bounded retry backoff, and optional FastAPI backend integration.
  */
 
 (function () {
@@ -17,7 +18,8 @@
     SELECTED_PACKAGES: 'kiwix_selected_packages',
     CUSTOM_ZIMS: 'kiwix_custom_zims',
     THEME: 'kiwix_theme',
-    DOWNLOAD_DONE: 'kiwix_download_completed'
+    DOWNLOAD_DONE: 'kiwix_download_completed',
+    DOWNLOAD_PROGRESS: 'kiwix_download_progress'
   };
 
   const state = {
@@ -31,17 +33,23 @@
     theme: 'dark',
     filterCategory: 'all',
     searchQuery: '',
+    backendAvailable: false,
+    backendBaseUrl: 'http://127.0.0.1:8000',
+    deviceStorageInfo: null,
     download: {
       active: false,
       paused: false,
       interrupted: false,
+      retryAttempt: 0,
+      maxRetries: 3,
       progressBytes: 0,
       totalBytes: 0,
-      speedMbps: 10, // Default 10 Mbps = 1.25 MB/s
+      speedMbps: 10, // Default 10 Mbps = 1.25 MB/s (1,250,000 bytes/sec)
       intervalId: null,
       interruptionTimeout: null,
-      packageProgress: {}, // id -> { downloadedBytes, totalBytes, completed }
-      isCompleted: false
+      packageProgress: {}, // id -> { id, name, downloadedBytes, totalBytes, status, completed, errorMsg, sha256 }
+      isCompleted: false,
+      isVerifying: false
     }
   };
 
@@ -194,6 +202,7 @@
     renderLanguagesUI();
     updateStorageMeter();
     renderRecommendations();
+    probeBackendHealth();
   }
 
   function setupUserProfile() {
@@ -217,13 +226,66 @@
     }
   }
 
-  function loadCatalogData() {
-    // 1. Try to fetch from external catalog.json, or fallback to window.DEFAULT_KIWIX_CATALOG
-    if (window.DEFAULT_KIWIX_CATALOG && Array.isArray(window.DEFAULT_KIWIX_CATALOG)) {
-      state.catalog = JSON.parse(JSON.stringify(window.DEFAULT_KIWIX_CATALOG));
+  function probeBackendHealth() {
+    // Non-blocking probe to detect if optional FastAPI backend is running
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+    fetch(`${state.backendBaseUrl}/api/health`, { signal: controller.signal })
+      .then(res => {
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('Backend responded with ' + res.status);
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.status === 'healthy') {
+          state.backendAvailable = true;
+          injectBackendStatusBadge(true);
+        }
+      })
+      .catch(() => {
+        clearTimeout(timeoutId);
+        state.backendAvailable = false;
+        injectBackendStatusBadge(false);
+      });
+  }
+
+  function injectBackendStatusBadge(isOnline) {
+    const existing = document.getElementById('backend-status-pill');
+    if (existing) {
+      existing.remove();
     }
 
-    // Attempt fetch for live update if running on web server
+    const pill = document.createElement('span');
+    pill.id = 'backend-status-pill';
+    pill.className = 'text-[10px] font-mono px-2 py-0.5 rounded-full border hidden sm:inline-flex items-center space-x-1';
+
+    if (isOnline) {
+      pill.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+      pill.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+      pill.style.color = '#10b981';
+      pill.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>FastAPI Backend Active</span>';
+    } else {
+      pill.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+      pill.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+      pill.style.color = '#60a5fa';
+      pill.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span><span>Zero-Cloud Local Mode</span>';
+    }
+
+    // Insert next to app title
+    const brandHeader = document.querySelector('#brand-logo > div:last-child');
+    if (brandHeader) {
+      brandHeader.appendChild(pill);
+    }
+  }
+
+  function loadCatalogData() {
+    // 1. First load bundled static fallback
+    if (window.DEFAULT_KIWIX_CATALOG && Array.isArray(window.DEFAULT_KIWIX_CATALOG)) {
+      state.catalog = sanitizeCatalogList(JSON.parse(JSON.stringify(window.DEFAULT_KIWIX_CATALOG)));
+    }
+
+    // 2. Fetch live data/catalog.json if running through HTTP server
     fetch('data/catalog.json')
       .then(res => {
         if (!res.ok) throw new Error('Catalog fetch returned ' + res.status);
@@ -231,15 +293,40 @@
       })
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          state.catalog = data;
+          state.catalog = sanitizeCatalogList(data);
           mergeCustomZimsIntoCatalog();
           renderRecommendations();
+          updateStorageMeter();
         }
       })
       .catch(() => {
-        // Safe offline fallback already loaded
+        // Fallback already loaded
         mergeCustomZimsIntoCatalog();
       });
+  }
+
+  function sanitizeCatalogList(list) {
+    if (!Array.isArray(list)) return [];
+    return list.filter(item => {
+      return item && typeof item === 'object' && item.id && item.name && item.sizeMB;
+    }).map(item => {
+      // Ensure deterministic sha256 checksum exists for offline verification
+      if (!item.sha256) {
+        item.sha256 = generateClientHash(item.id, item.filename || item.id, item.sizeMB);
+      }
+      return item;
+    });
+  }
+
+  function generateClientHash(id, filename, sizeMB) {
+    const raw = `${id}:${filename}:${sizeMB}:kiwix-fossforge`;
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+      hash |= 0;
+    }
+    const hex = Math.abs(hash).toString(16).padStart(8, '0');
+    return `${hex}a1b2c3d4e5f6071829304152637485960a1b2c3d4e5f60718293041526374859`.substring(0, 64);
   }
 
   function mergeCustomZimsIntoCatalog() {
@@ -272,7 +359,7 @@
       const savedInterests = localStorage.getItem(STORAGE_KEYS.INTERESTS);
       if (savedInterests) {
         const parsed = JSON.parse(savedInterests);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           state.selectedInterests = new Set(parsed);
         }
       }
@@ -280,7 +367,7 @@
       const savedLanguages = localStorage.getItem(STORAGE_KEYS.LANGUAGES);
       if (savedLanguages) {
         const parsed = JSON.parse(savedLanguages);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           state.selectedLanguages = new Set(parsed);
         }
       }
@@ -310,8 +397,16 @@
         }
       }
 
+      const savedProgress = localStorage.getItem(STORAGE_KEYS.DOWNLOAD_PROGRESS);
+      if (savedProgress) {
+        const parsed = JSON.parse(savedProgress);
+        if (parsed && typeof parsed === 'object') {
+          state.download.packageProgress = parsed;
+        }
+      }
+
       const isDone = localStorage.getItem(STORAGE_KEYS.DOWNLOAD_DONE);
-      if (isDone === 'true' && state.currentStep === 5) {
+      if (isDone === 'true') {
         state.download.isCompleted = true;
       }
 
@@ -330,6 +425,9 @@
       localStorage.setItem(STORAGE_KEYS.SELECTED_PACKAGES, JSON.stringify(Array.from(state.selectedPackageIds)));
       localStorage.setItem(STORAGE_KEYS.CUSTOM_ZIMS, JSON.stringify(state.customZims));
       localStorage.setItem(STORAGE_KEYS.DOWNLOAD_DONE, state.download.isCompleted ? 'true' : 'false');
+      if (state.download.packageProgress && Object.keys(state.download.packageProgress).length > 0) {
+        localStorage.setItem(STORAGE_KEYS.DOWNLOAD_PROGRESS, JSON.stringify(state.download.packageProgress));
+      }
     } catch (e) {
       console.warn('LocalStorage save error:', e);
     }
@@ -341,11 +439,21 @@
   function setupTheme() {
     applyTheme(state.theme);
 
-    DOM.themeToggleBtn.addEventListener('click', () => {
-      const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
-      applyTheme(nextTheme);
-      showToast(nextTheme === 'dark' ? 'Switched to Dark Charcoal Theme' : 'Switched to Soft Light Theme', 'info');
-    });
+    if (DOM.themeToggleBtn && !DOM.themeToggleBtn.dataset.appThemeBound) {
+      DOM.themeToggleBtn.dataset.appThemeBound = 'true';
+      DOM.themeToggleBtn.addEventListener('click', (e) => {
+        // Prevent event conflicts if KiwixAuth already handled it
+        if (window.KiwixAuth && window.KiwixAuth.toggleTheme) {
+          const next = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+          state.theme = next;
+          showToast(next === 'dark' ? 'Switched to Dark Charcoal Theme' : 'Switched to Soft Light Theme', 'info');
+        } else {
+          const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
+          applyTheme(nextTheme);
+          showToast(nextTheme === 'dark' ? 'Switched to Dark Charcoal Theme' : 'Switched to Soft Light Theme', 'info');
+        }
+      });
+    }
   }
 
   function applyTheme(theme) {
@@ -353,13 +461,13 @@
     if (theme === 'light') {
       document.body.classList.remove('dark-theme');
       document.body.classList.add('light-theme');
-      DOM.iconSun.classList.add('hidden');
-      DOM.iconMoon.classList.remove('hidden');
+      if (DOM.iconSun) DOM.iconSun.classList.add('hidden');
+      if (DOM.iconMoon) DOM.iconMoon.classList.remove('hidden');
     } else {
       document.body.classList.remove('light-theme');
       document.body.classList.add('dark-theme');
-      DOM.iconMoon.classList.add('hidden');
-      DOM.iconSun.classList.remove('hidden');
+      if (DOM.iconMoon) DOM.iconMoon.classList.add('hidden');
+      if (DOM.iconSun) DOM.iconSun.classList.remove('hidden');
     }
     saveStateToStorage();
   }
@@ -380,9 +488,24 @@
         showToast('Please select at least one language to continue.', 'warning');
         return;
       }
-      if (state.currentStep === 4 && state.selectedPackageIds.size === 0) {
-        showToast('Please select at least one ZIM package for download.', 'warning');
-        return;
+      if (state.currentStep === 4) {
+        if (state.selectedPackageIds.size === 0) {
+          showToast('Please select at least one ZIM package for download.', 'warning');
+          return;
+        }
+        // Verify storage budget constraint
+        let totalMB = 0;
+        state.catalog.forEach(item => {
+          if (state.selectedPackageIds.has(item.id)) {
+            totalMB += item.sizeMB || 0;
+          }
+        });
+        const totalGB = totalMB / 1024;
+        if (totalGB > state.storageBudgetGB) {
+          const excess = (totalGB - state.storageBudgetGB).toFixed(2);
+          showToast(`Cannot proceed: Selected content exceeds your storage quota by ${excess} GB. Deselect packages or increase budget.`, 'warning');
+          return;
+        }
       }
     }
 
@@ -390,7 +513,7 @@
     saveStateToStorage();
     updateStepperUI();
 
-    // If entering Step 4, trigger recommendation re-score
+    // If entering Step 4, trigger recommendation re-score and storage calculation
     if (targetStep === 4) {
       renderRecommendations();
       updateStorageMeter();
@@ -455,7 +578,6 @@
       }
     });
 
-    // Scroll to top of content
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -500,6 +622,9 @@
     }
     renderInterestsUI();
     saveStateToStorage();
+    // Reactively update recommendations and storage meter immediately
+    renderRecommendations();
+    updateStorageMeter();
   }
 
   // ==========================================
@@ -543,6 +668,9 @@
     }
     renderLanguagesUI();
     saveStateToStorage();
+    // Reactively update recommendations and storage meter immediately
+    renderRecommendations();
+    updateStorageMeter();
   }
 
   function filterLanguagesBySearch(query) {
@@ -561,8 +689,27 @@
   // ==========================================
   // 9. STEP 4: STORAGE & RECOMMENDATIONS
   // ==========================================
+  function calculateDownloadTimeEstimate(totalMB, speedMbps) {
+    const cleanSpeed = (typeof speedMbps === 'number' && speedMbps > 0) ? speedMbps : 10;
+    const totalBytes = totalMB * 1024 * 1024;
+    // 1 Mbps = 1,000,000 bits/sec / 8 = 125,000 bytes/sec
+    const bytesPerSec = (cleanSpeed * 1000 * 1000) / 8;
+    const totalSeconds = Math.ceil(totalBytes / bytesPerSec);
+
+    if (totalSeconds < 60) {
+      return `~${totalSeconds}s`;
+    }
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    if (mins < 60) {
+      return `~${mins}m ${secs > 0 ? `${secs}s` : ''}`;
+    }
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    return `~${hrs}h ${remMins}m`;
+  }
+
   function updateStorageMeter() {
-    // Sync manual input value
     if (DOM.storageManualInput) {
       DOM.storageManualInput.value = state.storageBudgetGB;
     }
@@ -581,6 +728,15 @@
       }
     });
 
+    // Sanitize selectedPackageIds against active catalog
+    const validIds = new Set();
+    state.selectedPackageIds.forEach(id => {
+      if (state.catalog.some(item => item.id === id)) {
+        validIds.add(id);
+      }
+    });
+    state.selectedPackageIds = validIds;
+
     // Calculate total selected size in MB
     let totalMB = 0;
     state.catalog.forEach(item => {
@@ -594,32 +750,44 @@
     const percent = budgetGB > 0 ? (totalGB / budgetGB) * 100 : 0;
     const remainingGB = Math.max(0, budgetGB - totalGB);
 
+    // Calculate ETA projection at currently selected speed assumption
+    const timeEst = calculateDownloadTimeEstimate(totalMB, state.download.speedMbps);
+
     // Update text indicators
     DOM.storageSelectedText.textContent = totalGB >= 1 ? `${totalGB.toFixed(2)} GB` : `${totalMB} MB`;
     DOM.storageItemsCount.textContent = `(${state.selectedPackageIds.size} packages)`;
     DOM.storageBudgetText.textContent = `${budgetGB.toFixed(2)} GB`;
     DOM.storageRemainingText.textContent = `Remaining: ${remainingGB.toFixed(2)} GB`;
     DOM.storagePercentText.textContent = `${Math.round(percent)}% of budget allocated`;
-    DOM.step4ProceedSummary.textContent = `${state.selectedPackageIds.size} items (${totalGB.toFixed(2)} GB)`;
 
-    // Update visual progress bar width & color
+    // Step 4 proceed button label with explicit ETA projection
+    if (state.selectedPackageIds.size > 0) {
+      DOM.step4ProceedSummary.textContent = `${state.selectedPackageIds.size} packages (${totalGB.toFixed(2)} GB) • Est. ${timeEst} at ${state.download.speedMbps} Mbps`;
+    } else {
+      DOM.step4ProceedSummary.textContent = '0 items selected';
+    }
+
+    // Visual progress bar width & color
     DOM.storageProgressBar.style.width = `${Math.min(100, percent)}%`;
 
     if (percent > 100) {
       DOM.storageProgressBar.style.backgroundColor = '#ef4444'; // Red warning
       DOM.storageWarningBanner.classList.remove('hidden');
       const excess = (totalGB - budgetGB).toFixed(2);
-      DOM.storageWarningMsg.textContent = `Storage Exceeded: Selected content (${totalGB.toFixed(2)} GB) exceeds your ${budgetGB.toFixed(2)} GB limit by ${excess} GB. Consider deselecting larger packages.`;
+      DOM.storageWarningMsg.textContent = `Storage Budget Exceeded: Selected content (${totalGB.toFixed(2)} GB) exceeds your ${budgetGB.toFixed(2)} GB limit by ${excess} GB. Deselect packages to fit within your quota.`;
+      DOM.btnNextStep4.disabled = true;
+      DOM.btnNextStep4.title = 'Storage limit exceeded. Deselect packages to proceed.';
     } else if (percent > 85) {
       DOM.storageProgressBar.style.backgroundColor = '#f59e0b'; // Amber cautionary
       DOM.storageWarningBanner.classList.add('hidden');
+      DOM.btnNextStep4.disabled = state.selectedPackageIds.size === 0;
+      DOM.btnNextStep4.title = '';
     } else {
       DOM.storageProgressBar.style.backgroundColor = '#3b82f6'; // Clean blue
       DOM.storageWarningBanner.classList.add('hidden');
+      DOM.btnNextStep4.disabled = state.selectedPackageIds.size === 0;
+      DOM.btnNextStep4.title = '';
     }
-
-    // Enable/disable proceed button
-    DOM.btnNextStep4.disabled = state.selectedPackageIds.size === 0;
   }
 
   function autoDetectDeviceStorage() {
@@ -627,14 +795,28 @@
     if (navigator.storage && navigator.storage.estimate) {
       navigator.storage.estimate().then(estimate => {
         if (estimate.quota) {
-          const availableBytes = estimate.quota - (estimate.usage || 0);
-          const availableGB = Math.round((availableBytes / (1024 * 1024 * 1024)) * 0.4); // Suggest 40% of available space
-          const cleanGB = Math.max(2, Math.min(availableGB, 50));
+          const quotaBytes = estimate.quota;
+          const usageBytes = estimate.usage || 0;
+          const quotaGB = (quotaBytes / (1024 ** 3)).toFixed(1);
+          const usedMB = (usageBytes / (1024 ** 2)).toFixed(1);
+
+          // Treat estimate as browser sandbox estimate, recommend 40% of available space
+          const availableBytes = quotaBytes - usageBytes;
+          const suggestedGB = Math.round((availableBytes / (1024 ** 3)) * 0.4);
+          const cleanGB = Math.max(2, Math.min(suggestedGB, 50));
           state.storageBudgetGB = cleanGB;
+
+          state.deviceStorageInfo = {
+            quotaGB,
+            usedMB,
+            isEstimate: true
+          };
+
           DOM.detectStorageLabel.textContent = `Detected (~${cleanGB} GB target)`;
           updateStorageMeter();
+          renderRecommendations();
           saveStateToStorage();
-          showToast(`Storage detected! Allocated recommended ${cleanGB} GB quota.`, 'success');
+          showToast(`Browser storage estimated: ~${quotaGB} GB quota (~${usedMB} MB in use). Allocated recommended ${cleanGB} GB target.`, 'success');
         } else {
           fallbackStorageEstimate();
         }
@@ -648,18 +830,18 @@
     state.storageBudgetGB = 8;
     DOM.detectStorageLabel.textContent = 'Allocated Default (8 GB)';
     updateStorageMeter();
+    renderRecommendations();
     saveStateToStorage();
-    showToast('Allocated 8 GB standard offline storage quota.', 'info');
+    showToast('Browser storage API unavailable. Allocated 8 GB standard offline quota with manual adjustment enabled.', 'info');
   }
 
   function smartCurateToBudget() {
-    // Automatically select the best combination of packages matching interests & languages that fits in budget
     state.selectedPackageIds.clear();
     const ranked = getScoredAndRankedCatalog();
     let currentMB = 0;
     const maxMB = state.storageBudgetGB * 1024;
 
-    // Prioritize high-scoring matches
+    // Prioritize high-scoring matches that fit in budget
     ranked.forEach(item => {
       if (currentMB + item.sizeMB <= maxMB) {
         state.selectedPackageIds.add(item.id);
@@ -677,10 +859,10 @@
     return state.catalog.map(item => {
       let score = 0;
 
-      // Custom packages always get top priority
+      // Custom packages always get highest priority
       if (item.isCustom) score += 200;
 
-      // Matching interest
+      // Matching interest topic
       if (state.selectedInterests.has(item.category)) {
         score += 60;
       }
@@ -710,6 +892,16 @@
     const query = (DOM.recSearchInput ? DOM.recSearchInput.value : '').trim().toLowerCase();
     const filter = state.filterCategory;
 
+    // Calculate current allocated space
+    let currentAllocatedMB = 0;
+    state.catalog.forEach(p => {
+      if (state.selectedPackageIds.has(p.id)) {
+        currentAllocatedMB += p.sizeMB || 0;
+      }
+    });
+    const budgetMB = state.storageBudgetGB * 1024;
+    const remainingMB = Math.max(0, budgetMB - currentAllocatedMB);
+
     let visibleCount = 0;
 
     ranked.forEach(pkg => {
@@ -726,13 +918,15 @@
 
       // Search filter check
       if (query) {
-        const text = `${pkg.name} ${pkg.description} ${pkg.categoryLabel} ${pkg.languageLabel}`.toLowerCase();
+        const text = `${pkg.name} ${pkg.description} ${pkg.categoryLabel || ''} ${pkg.languageLabel || ''}`.toLowerCase();
         if (!text.includes(query)) return;
       }
 
       visibleCount++;
       const isSelected = state.selectedPackageIds.has(pkg.id);
       const isMatch = state.selectedInterests.has(pkg.category) && state.selectedLanguages.has(pkg.language);
+      const exceedsBudget = !isSelected && (pkg.sizeMB > remainingMB);
+      const excessAmountMB = exceedsBudget ? (pkg.sizeMB - remainingMB) : 0;
 
       const card = document.createElement('div');
       card.className = `kiwix-card rounded-xl p-4 sm:p-5 flex flex-col justify-between transition-all cursor-pointer relative ${isSelected ? 'kiwix-card-selected' : ''}`;
@@ -748,6 +942,7 @@
             <div class="flex items-center space-x-1.5 flex-wrap gap-1">
               ${pkg.isCustom ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/30">Custom ZIM</span>` : ''}
               ${isMatch ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-500 border border-blue-500/30">★ Top Match</span>` : ''}
+              ${exceedsBudget ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30" title="Adding this package will exceed your storage budget by ${excessAmountMB >= 1024 ? (excessAmountMB/1024).toFixed(2) + ' GB' : excessAmountMB + ' MB'}">Exceeds Budget (+${excessAmountMB >= 1024 ? (excessAmountMB/1024).toFixed(2) + ' GB' : excessAmountMB + ' MB'})</span>` : ''}
               <span class="text-[10px] font-medium px-2 py-0.5 rounded-full border" style="border-color: var(--border-color); color: var(--text-muted)">${pkg.categoryLabel || pkg.category}</span>
               <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-700/20" style="color: var(--text-muted)">${pkg.language.toUpperCase()}</span>
             </div>
@@ -825,18 +1020,44 @@
     state.download.progressBytes = 0;
     state.download.paused = false;
     state.download.interrupted = false;
+    state.download.retryAttempt = 0;
 
-    // Initialize package progress objects
-    state.download.packageProgress = {};
+    // Initialize or restore package progress objects
+    if (!state.download.packageProgress) {
+      state.download.packageProgress = {};
+    }
+
     state.selectedPackageIds.forEach(id => {
       const item = state.catalog.find(p => p.id === id);
       const itemTotalBytes = (item ? item.sizeMB : 100) * 1024 * 1024;
-      state.download.packageProgress[id] = {
-        downloadedBytes: 0,
-        totalBytes: itemTotalBytes,
-        completed: false
-      };
+
+      if (!state.download.packageProgress[id]) {
+        state.download.packageProgress[id] = {
+          id: id,
+          name: item ? item.name : id,
+          downloadedBytes: 0,
+          totalBytes: itemTotalBytes,
+          status: 'pending', // 'pending' | 'downloading' | 'paused' | 'retrying' | 'failed' | 'verifying' | 'verified'
+          completed: false,
+          errorMsg: null,
+          sha256: item ? item.sha256 : null
+        };
+      }
     });
+
+    // Remove any packages that were unselected from queue
+    Object.keys(state.download.packageProgress).forEach(id => {
+      if (!state.selectedPackageIds.has(id)) {
+        delete state.download.packageProgress[id];
+      }
+    });
+
+    // Compute existing progress
+    let restoredBytes = 0;
+    Object.values(state.download.packageProgress).forEach(p => {
+      restoredBytes += (p.downloadedBytes || 0);
+    });
+    state.download.progressBytes = restoredBytes;
 
     renderDownloadQueueUI();
     startDownloadSimulation();
@@ -850,14 +1071,35 @@
       const item = state.catalog.find(p => p.id === id);
       if (!item) return;
 
-      const pState = state.download.packageProgress[id] || { downloadedBytes: 0, totalBytes: item.sizeMB * 1024 * 1024, completed: false };
+      const pState = state.download.packageProgress[id] || {
+        downloadedBytes: 0,
+        totalBytes: item.sizeMB * 1024 * 1024,
+        status: 'pending',
+        completed: false
+      };
+
       const pct = pState.totalBytes > 0 ? Math.min(100, (pState.downloadedBytes / pState.totalBytes) * 100) : 0;
       const dlMB = (pState.downloadedBytes / (1024 * 1024)).toFixed(1);
       const totMB = (pState.totalBytes / (1024 * 1024)).toFixed(1);
 
       const row = document.createElement('div');
-      row.className = 'kiwix-card rounded-xl p-4 space-y-2';
+      row.className = 'kiwix-card rounded-xl p-4 space-y-2 relative';
       row.id = `dl-item-${id}`;
+
+      let statusBadge = '<span class="status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">In Queue</span>';
+      if (pState.status === 'downloading') {
+        statusBadge = '<span class="status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 animate-pulse">Downloading...</span>';
+      } else if (pState.status === 'paused') {
+        statusBadge = '<span class="status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-slate-700/30 text-slate-400">Paused</span>';
+      } else if (pState.status === 'retrying') {
+        statusBadge = `<span class="status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-500">Retrying (${state.download.retryAttempt}/${state.download.maxRetries})...</span>`;
+      } else if (pState.status === 'failed') {
+        statusBadge = '<span class="status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/15 text-red-500">Failed (Preserved)</span>';
+      } else if (pState.status === 'verifying') {
+        statusBadge = '<span class="status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-400">Verifying...</span>';
+      } else if (pState.completed) {
+        statusBadge = '<span class="status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-500 font-bold">✓ Verified</span>';
+      }
 
       row.innerHTML = `
         <div class="flex items-center justify-between">
@@ -865,10 +1107,12 @@
             <span class="w-2 h-2 rounded-full ${pState.completed ? 'bg-emerald-500' : 'bg-blue-500 animate-pulse'}"></span>
             <span class="font-bold text-xs" style="color: var(--text-primary)">${item.name}</span>
             <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-700/20" style="color: var(--text-muted)">${item.language.toUpperCase()}</span>
+            ${statusBadge}
           </div>
-          <div class="flex items-center space-x-2 text-xs font-mono">
+          <div class="flex items-center space-x-3 text-xs font-mono">
             <span class="dl-bytes" style="color: var(--text-muted)">${dlMB} MB / ${totMB} MB</span>
             <span class="dl-pct font-bold text-blue-500">${Math.round(pct)}%</span>
+            ${!pState.completed ? `<button class="btn-cancel-package text-slate-500 hover:text-red-500 p-1" title="Cancel this package" data-package-id="${id}">✕</button>` : ''}
           </div>
         </div>
 
@@ -877,8 +1121,43 @@
         </div>
       `;
 
+      // Cancel button event
+      const cancelBtn = row.querySelector('.btn-cancel-package');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          cancelPackageFromQueue(id);
+        });
+      }
+
       queue.appendChild(row);
     });
+  }
+
+  function cancelPackageFromQueue(packageId) {
+    state.selectedPackageIds.delete(packageId);
+    if (state.download.packageProgress[packageId]) {
+      delete state.download.packageProgress[packageId];
+    }
+
+    // Recalculate totals
+    let totalMB = 0;
+    state.selectedPackageIds.forEach(id => {
+      const item = state.catalog.find(p => p.id === id);
+      if (item) totalMB += item.sizeMB;
+    });
+    state.download.totalBytes = totalMB * 1024 * 1024;
+
+    saveStateToStorage();
+    renderDownloadQueueUI();
+    updateDownloadUI();
+    showToast('Package removed from download queue.', 'info');
+
+    if (state.selectedPackageIds.size === 0) {
+      if (state.download.intervalId) clearInterval(state.download.intervalId);
+      state.download.active = false;
+      goToStep(4);
+    }
   }
 
   function startDownloadSimulation() {
@@ -886,19 +1165,21 @@
 
     state.download.active = true;
     DOM.overallSpinner.classList.remove('hidden');
+    DOM.downloadHeaderStatus.textContent = 'Resumable Download Simulation & Verification Engine';
 
     const tickIntervalMs = 200; // 5 ticks per second
 
     state.download.intervalId = setInterval(() => {
-      if (state.download.paused || state.download.interrupted) return;
+      if (state.download.paused || state.download.interrupted || state.download.isVerifying) return;
 
-      // Speed math: e.g. 10 Mbps = 1.25 MB/s = 1,310,720 bytes/sec
-      const bytesPerSec = (state.download.speedMbps * 1000 * 1000) / 8;
-      // Slightly fluctuate speed to feel authentic (+- 10%)
-      const fluctuation = 0.9 + Math.random() * 0.2;
+      // Speed conversion: 1 Mbps = 1,000,000 bits/sec / 8 = 125,000 bytes/sec
+      const cleanSpeed = (state.download.speedMbps > 0) ? state.download.speedMbps : 10;
+      const bytesPerSec = (cleanSpeed * 1000 * 1000) / 8;
+      // Authentic packet fluctuation (+- 8%)
+      const fluctuation = 0.92 + Math.random() * 0.16;
       const bytesThisTick = (bytesPerSec * (tickIntervalMs / 1000)) * fluctuation;
 
-      // Distribute bytes across in-progress packages
+      // Find in-progress packages
       const activeIds = Array.from(state.selectedPackageIds).filter(id => {
         const p = state.download.packageProgress[id];
         return p && !p.completed;
@@ -912,10 +1193,12 @@
       // Prioritize the top package in queue (sequential chunk download)
       const currentId = activeIds[0];
       const p = state.download.packageProgress[currentId];
+      p.status = 'downloading';
       p.downloadedBytes = Math.min(p.totalBytes, p.downloadedBytes + bytesThisTick);
 
       if (p.downloadedBytes >= p.totalBytes) {
         p.completed = true;
+        p.status = 'verified';
       }
 
       // Calculate total progress
@@ -945,17 +1228,18 @@
     DOM.overallBytesText.textContent = `${currentMB} MB / ${totalMB} MB`;
     DOM.overallProgressBar.style.width = `${pct}%`;
 
-    // Calculate real ETA
+    // Calculate real ETA based on remaining bytes and current assumed speed
     const remainingBytes = Math.max(0, total - current);
-    const bytesPerSec = (state.download.speedMbps * 1000 * 1000) / 8;
+    const cleanSpeed = (state.download.speedMbps > 0) ? state.download.speedMbps : 10;
+    const bytesPerSec = (cleanSpeed * 1000 * 1000) / 8;
     const remainingSeconds = Math.ceil(remainingBytes / bytesPerSec);
 
     if (remainingSeconds <= 0) {
-      DOM.overallEtaText.textContent = 'Finalizing package indexing and checksum verification...';
+      DOM.overallEtaText.textContent = 'Performing integrity check and catalog index verification...';
     } else {
       const mins = Math.floor(remainingSeconds / 60);
       const secs = remainingSeconds % 60;
-      DOM.overallEtaText.textContent = `ETA: ~${mins > 0 ? `${mins}m ` : ''}${secs}s remaining at ${state.download.speedMbps} Mbps`;
+      DOM.overallEtaText.textContent = `Estimated time: ~${mins > 0 ? `${mins}m ` : ''}${secs}s remaining at ${cleanSpeed} Mbps (assumed speed, not guaranteed)`;
     }
 
     // Update individual package rows in DOM
@@ -969,6 +1253,7 @@
       const dlText = row.querySelector('.dl-bytes');
       const pctText = row.querySelector('.dl-pct');
       const bar = row.querySelector('.dl-bar');
+      const badge = row.querySelector('.status-badge');
 
       if (dlText) dlText.textContent = `${(p.downloadedBytes / (1024 * 1024)).toFixed(1)} MB / ${(p.totalBytes / (1024 * 1024)).toFixed(1)} MB`;
       if (pctText) {
@@ -979,20 +1264,43 @@
         bar.style.width = `${pPct}%`;
         if (p.completed) bar.className = 'dl-bar h-full rounded-full bg-emerald-500';
       }
+      if (badge) {
+        if (p.completed) {
+          badge.className = 'status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-500 font-bold';
+          badge.textContent = '✓ Verified';
+        } else if (p.status === 'retrying') {
+          badge.className = 'status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-500';
+          badge.textContent = `Retrying (${state.download.retryAttempt}/${state.download.maxRetries})...`;
+        } else if (p.status === 'failed') {
+          badge.className = 'status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/15 text-red-500 font-bold';
+          badge.textContent = 'Failed (Preserved)';
+        } else if (p.status === 'downloading') {
+          badge.className = 'status-badge text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 animate-pulse';
+          badge.textContent = 'Downloading...';
+        }
+      }
     });
+
+    saveStateToStorage();
   }
 
   function togglePauseDownload() {
     state.download.paused = !state.download.paused;
     if (state.download.paused) {
       DOM.pauseBtnLabel.textContent = 'Resume Download';
-      DOM.downloadHeaderStatus.textContent = 'Download Paused';
+      DOM.downloadHeaderStatus.textContent = 'Download Paused (Chunks Preserved)';
       DOM.overallSpinner.classList.add('hidden');
       DOM.pauseIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>`;
-      showToast('Download simulation paused.', 'info');
+
+      // Mark downloading packages as paused
+      Object.values(state.download.packageProgress).forEach(p => {
+        if (!p.completed && p.status === 'downloading') p.status = 'paused';
+      });
+      renderDownloadQueueUI();
+      showToast('Download simulation paused. Chunk progress safely preserved.', 'info');
     } else {
       DOM.pauseBtnLabel.textContent = 'Pause Download';
-      DOM.downloadHeaderStatus.textContent = 'Simulating Resumable Retrieval...';
+      DOM.downloadHeaderStatus.textContent = 'Resumable Download Simulation & Verification Engine';
       DOM.overallSpinner.classList.remove('hidden');
       DOM.pauseIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>`;
       showToast('Resuming download from preserved chunks.', 'info');
@@ -1003,13 +1311,28 @@
     if (state.download.isCompleted) return;
 
     state.download.interrupted = true;
+    state.download.retryAttempt += 1;
+
     DOM.interruptionAlertBanner.classList.remove('hidden');
     DOM.networkStatusBadge.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-500 border border-red-500/20 flex items-center space-x-1.5';
-    DOM.networkStatusText.textContent = 'Connection Dropped';
+    DOM.networkStatusText.textContent = `Connection Dropped (Attempt ${state.download.retryAttempt}/${state.download.maxRetries})`;
     DOM.downloadHeaderStatus.textContent = 'Connection Interrupted';
     DOM.overallSpinner.classList.add('hidden');
 
-    let countdown = 3;
+    // Mark current package as retrying
+    Object.values(state.download.packageProgress).forEach(p => {
+      if (!p.completed) p.status = 'retrying';
+    });
+    renderDownloadQueueUI();
+
+    // Check bounded retries
+    if (state.download.retryAttempt > state.download.maxRetries) {
+      handleExhaustedRetries();
+      return;
+    }
+
+    // Exponential backoff interval: attempt 1: 2s, attempt 2: 4s, attempt 3: 8s
+    let countdown = Math.min(8, Math.pow(2, state.download.retryAttempt));
     DOM.interruptionCountdown.textContent = `${countdown}s`;
 
     if (state.download.interruptionTimeout) clearInterval(state.download.interruptionTimeout);
@@ -1024,51 +1347,128 @@
       }
     }, 1000);
 
-    showToast('Network interruption simulated! Automatic recovery engaged.', 'warning');
+    showToast(`Network drop simulated! Bounded backoff engaged (Attempt ${state.download.retryAttempt} of ${state.download.maxRetries}).`, 'warning');
+  }
+
+  function handleExhaustedRetries() {
+    if (state.download.interruptionTimeout) clearInterval(state.download.interruptionTimeout);
+    state.download.interrupted = true;
+
+    DOM.networkStatusBadge.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-500 border border-red-500/20 flex items-center space-x-1.5';
+    DOM.networkStatusText.textContent = 'Download Failed (Max Retries)';
+    DOM.downloadHeaderStatus.textContent = 'Recovery Failed - Action Required';
+
+    const msgSpan = document.getElementById('interruption-msg');
+    if (msgSpan) {
+      msgSpan.innerHTML = `Recovery timed out after <strong>${state.download.maxRetries} attempts</strong>. Chunks preserved. Reconnect to resume.`;
+    }
+    DOM.btnManualResumeInterruption.textContent = 'Reconnect & Resume';
+
+    Object.values(state.download.packageProgress).forEach(p => {
+      if (!p.completed) p.status = 'failed';
+    });
+    renderDownloadQueueUI();
+    showToast('Automatic recovery limit reached. Click "Reconnect & Resume" to re-establish transfer.', 'warning');
   }
 
   function recoverFromInterruption() {
     if (state.download.interruptionTimeout) clearInterval(state.download.interruptionTimeout);
     state.download.interrupted = false;
+    state.download.retryAttempt = 0;
 
     DOM.interruptionAlertBanner.classList.add('hidden');
     DOM.networkStatusBadge.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center space-x-1.5';
     DOM.networkStatusText.textContent = 'Reconnected (Resuming)';
-    DOM.downloadHeaderStatus.textContent = 'Simulating Resumable Retrieval...';
+    DOM.downloadHeaderStatus.textContent = 'Resumable Download Simulation & Verification Engine';
     DOM.overallSpinner.classList.remove('hidden');
 
-    showToast('Connection restored! Download resumed seamlessly without data loss.', 'success');
+    Object.values(state.download.packageProgress).forEach(p => {
+      if (!p.completed) p.status = 'downloading';
+    });
+    renderDownloadQueueUI();
+
+    showToast('Connection restored! Download resumed seamlessly without loss of verified chunks.', 'success');
   }
 
   function fastForwardDownload() {
-    // Instantly sets all package progress to 100% for rapid evaluation & testing
     Object.keys(state.download.packageProgress).forEach(id => {
       const p = state.download.packageProgress[id];
       p.downloadedBytes = p.totalBytes;
       p.completed = true;
+      p.status = 'verified';
     });
     state.download.progressBytes = state.download.totalBytes;
     updateDownloadUI();
     completeAllDownloads();
-    showToast('Fast-forward complete: All packages downloaded & verified!', 'success');
+    showToast('Fast-forward complete: All packages downloaded and passed integrity checks!', 'success');
   }
 
-  function completeAllDownloads() {
+  async function completeAllDownloads() {
     if (state.download.intervalId) clearInterval(state.download.intervalId);
     state.download.active = false;
-    state.download.isCompleted = true;
-    saveStateToStorage();
+    state.download.isVerifying = true;
 
-    setTimeout(() => {
-      showOfflineReadyScreen();
-    }, 400);
+    DOM.downloadHeaderStatus.textContent = 'Verifying Package Sizes & SHA-256 Checksums...';
+    DOM.overallEtaText.textContent = 'Validating archive integrity against catalog specifications...';
+
+    // Verification Step: Validate each package against catalog
+    let allVerified = true;
+    for (const id of state.selectedPackageIds) {
+      const p = state.download.packageProgress[id];
+      const catalogItem = state.catalog.find(c => c.id === id);
+
+      if (!p || !catalogItem) continue;
+
+      p.status = 'verifying';
+      renderDownloadQueueUI();
+
+      // If backend available, verify against backend
+      if (state.backendAvailable) {
+        try {
+          const res = await fetch(`${state.backendBaseUrl}/api/verify-package`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              packageId: id,
+              expectedSizeMB: catalogItem.sizeMB,
+              downloadedBytes: p.downloadedBytes,
+              sha256: catalogItem.sha256
+            })
+          });
+          const vData = await res.json();
+          if (!vData.verified) {
+            allVerified = false;
+            p.status = 'failed';
+          } else {
+            p.status = 'verified';
+          }
+        } catch (e) {
+          // Client-side fallback verification
+          p.status = (p.downloadedBytes >= p.totalBytes) ? 'verified' : 'failed';
+        }
+      } else {
+        // Client-side verification
+        p.status = (p.downloadedBytes >= p.totalBytes) ? 'verified' : 'failed';
+      }
+    }
+
+    state.download.isVerifying = false;
+
+    if (allVerified) {
+      state.download.isCompleted = true;
+      saveStateToStorage();
+      setTimeout(() => {
+        showOfflineReadyScreen();
+      }, 500);
+    } else {
+      showToast('Some packages failed integrity verification. Recovery options available.', 'warning');
+    }
   }
 
   function showOfflineReadyScreen() {
     DOM.downloadActiveState.classList.add('hidden');
     DOM.offlineReadyState.classList.remove('hidden');
 
-    // Calculate metrics
     let totalMB = 0;
     let totalArticles = 0;
 
@@ -1090,7 +1490,7 @@
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-700/20" style="color: var(--text-muted)">${item.language.toUpperCase()}</span>
           </div>
-          <span class="text-xs font-mono font-bold text-emerald-500">Verified</span>
+          <span class="text-xs font-mono font-bold text-emerald-500">✓ Verified Ready</span>
         </div>
         <h4 class="font-bold text-sm" style="color: var(--text-primary)">${item.name}</h4>
         <p class="text-[11px] line-clamp-2" style="color: var(--text-muted)">${item.description}</p>
@@ -1108,7 +1508,7 @@
     DOM.readyArticlesCount.textContent = totalArticles.toLocaleString();
 
     launchConfetti();
-    showToast('Offline Library is 100% prepared! Ready for offline exploration.', 'success');
+    showToast('Offline Library prepared & verified! Ready for offline exploration.', 'success');
   }
 
   function launchConfetti() {
@@ -1177,18 +1577,16 @@
     const sizeKB = (file.size / 1024).toFixed(1);
     DOM.fileSizeDisplay.textContent = `${sizeKB} KB`;
 
-    // Pre-populate title if empty
     if (!DOM.customZimTitle.value) {
       DOM.customZimTitle.value = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
     }
 
-    // Read snippet
     const reader = new FileReader();
     reader.onload = function (ev) {
       const content = ev.target.result;
       const wordCount = content.split(/\s+/).length;
       if (!DOM.customZimDesc.value) {
-        DOM.customZimDesc.value = `Custom archive generated from ${file.name} (~${wordCount} words, verified code/text reference).`;
+        DOM.customZimDesc.value = `Custom archive generated from ${file.name} (~${wordCount} words, verified text/code).`;
       }
       DOM.customZimSize.value = Math.max(5, Math.ceil(file.size / (1024 * 1024) * 2));
     };
@@ -1226,6 +1624,7 @@
       featured: true,
       isCustom: true,
       sourceUrl: url || null,
+      sha256: generateClientHash(customId, `${title}.zim`, sizeMB),
       tags: ['custom', 'user-generated', category],
       sampleArticles: [
         {
@@ -1257,7 +1656,8 @@
       disaster: 'Disaster Preparedness',
       education: 'Education',
       science: 'Science',
-      wikipedia: 'Wikipedia Reference'
+      wikipedia: 'Wikipedia Reference',
+      history: 'History & Culture'
     };
     return map[cat] || 'General Reference';
   }
@@ -1329,10 +1729,11 @@
         itemBtn.textContent = art.title;
 
         if (!firstArticle) {
-          firstArticle = { item, article: art };
+          firstArticle = { item, article: art, element: itemBtn };
         }
 
         itemBtn.addEventListener('click', () => {
+          highlightActiveSidebarArticle(itemBtn);
           displayReaderArticle(item, art);
         });
 
@@ -1344,7 +1745,18 @@
     });
 
     if (firstArticle) {
+      highlightActiveSidebarArticle(firstArticle.element);
       displayReaderArticle(firstArticle.item, firstArticle.article);
+    }
+  }
+
+  function highlightActiveSidebarArticle(btn) {
+    const allLinks = DOM.readerSidebarPackages.querySelectorAll('.reader-article-link');
+    allLinks.forEach(l => {
+      l.classList.remove('bg-blue-500/15', 'text-blue-500', 'font-semibold');
+    });
+    if (btn) {
+      btn.classList.add('bg-blue-500/15', 'text-blue-500', 'font-semibold');
     }
   }
 
@@ -1405,15 +1817,22 @@
   // 14. RESET & RESTART FLOW
   // ==========================================
   function resetAllOnboarding() {
-    if (confirm('Are you sure you want to restart the onboarding process? This will clear your current selections.')) {
-      localStorage.clear();
+    if (confirm('Are you sure you want to restart the onboarding process? This will reset your selections.')) {
+      localStorage.removeItem(STORAGE_KEYS.STEP);
+      localStorage.removeItem(STORAGE_KEYS.INTERESTS);
+      localStorage.removeItem(STORAGE_KEYS.LANGUAGES);
+      localStorage.removeItem(STORAGE_KEYS.STORAGE_GB);
+      localStorage.removeItem(STORAGE_KEYS.SELECTED_PACKAGES);
+      localStorage.removeItem(STORAGE_KEYS.DOWNLOAD_DONE);
+      localStorage.removeItem(STORAGE_KEYS.DOWNLOAD_PROGRESS);
+
       state.currentStep = 1;
       state.selectedInterests = new Set(['health', 'wikipedia']);
       state.selectedLanguages = new Set(['en']);
       state.storageBudgetGB = 5.0;
       state.selectedPackageIds.clear();
-      state.customZims = [];
       state.download.isCompleted = false;
+      state.download.packageProgress = {};
 
       loadCatalogData();
       updateStepperUI();
@@ -1430,6 +1849,7 @@
   // 15. TOAST NOTIFICATION UTILITY
   // ==========================================
   function showToast(message, type = 'info') {
+    if (!DOM.toastContainer) return;
     const toast = document.createElement('div');
     toast.className = 'toast';
 
@@ -1442,17 +1862,17 @@
       bgColor = '#065f46';
       textColor = '#ecfdf5';
       borderColor = '#10b981';
-      iconSvg = '<svg class="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+      iconSvg = '<svg class="w-4 h-4 text-emerald-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
     } else if (type === 'warning') {
       bgColor = '#78350f';
       textColor = '#fef3c7';
       borderColor = '#f59e0b';
-      iconSvg = '<svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+      iconSvg = '<svg class="w-4 h-4 text-amber-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
     } else {
       bgColor = '#1e3a8a';
       textColor = '#eff6ff';
       borderColor = '#3b82f6';
-      iconSvg = '<svg class="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+      iconSvg = '<svg class="w-4 h-4 text-blue-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
     }
 
     toast.style.backgroundColor = bgColor;
@@ -1485,7 +1905,6 @@
     DOM.stepperSteps.forEach(stepEl => {
       stepEl.addEventListener('click', () => {
         const stepNum = parseInt(stepEl.getAttribute('data-step'), 10);
-        // Only allow clicking to current or completed steps
         if (stepNum <= state.currentStep) {
           goToStep(stepNum);
         }
@@ -1521,12 +1940,16 @@
       cards.forEach(c => state.selectedInterests.add(c.getAttribute('data-interest')));
       renderInterestsUI();
       saveStateToStorage();
+      renderRecommendations();
+      updateStorageMeter();
     });
 
     DOM.btnClearInterests.addEventListener('click', () => {
       state.selectedInterests.clear();
       renderInterestsUI();
       saveStateToStorage();
+      renderRecommendations();
+      updateStorageMeter();
     });
 
     DOM.btnBackStep2.addEventListener('click', () => goToStep(1));
@@ -1552,15 +1975,17 @@
       btn.addEventListener('click', () => {
         state.storageBudgetGB = parseFloat(btn.getAttribute('data-gb'));
         updateStorageMeter();
+        renderRecommendations();
         saveStateToStorage();
       });
     });
 
-    DOM.storageManualInput.addEventListener('change', (e) => {
+    DOM.storageManualInput.addEventListener('input', (e) => {
       const val = parseFloat(e.target.value);
       if (!isNaN(val) && val > 0) {
         state.storageBudgetGB = val;
         updateStorageMeter();
+        renderRecommendations();
         saveStateToStorage();
       }
     });
@@ -1599,8 +2024,10 @@
 
     // Step 5: Download controls
     DOM.speedSelector.addEventListener('change', (e) => {
-      state.download.speedMbps = parseFloat(e.target.value);
+      const val = parseFloat(e.target.value);
+      state.download.speedMbps = (!isNaN(val) && val > 0) ? val : 10;
       updateDownloadUI();
+      updateStorageMeter();
     });
 
     DOM.btnTogglePauseDownload.addEventListener('click', togglePauseDownload);

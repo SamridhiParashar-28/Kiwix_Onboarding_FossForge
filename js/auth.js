@@ -147,18 +147,24 @@
     }
   }
 
+  function toggleTheme() {
+    const currentTheme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(nextTheme);
+    localStorage.setItem(AUTH_STORAGE_KEYS.THEME, nextTheme);
+    return nextTheme;
+  }
+
   // Universal Theme Controller for all pages
   function setupGlobalTheme() {
     const savedTheme = localStorage.getItem(AUTH_STORAGE_KEYS.THEME) || 'dark';
     applyTheme(savedTheme);
 
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
-    if (themeToggleBtn) {
+    if (themeToggleBtn && !themeToggleBtn.dataset.themeBound) {
+      themeToggleBtn.dataset.themeBound = 'true';
       themeToggleBtn.addEventListener('click', () => {
-        const currentTheme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
-        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        applyTheme(nextTheme);
-        localStorage.setItem(AUTH_STORAGE_KEYS.THEME, nextTheme);
+        toggleTheme();
       });
     }
   }
@@ -178,6 +184,7 @@
       if (iconMoon) iconMoon.classList.add('hidden');
       if (iconSun) iconSun.classList.remove('hidden');
     }
+    localStorage.setItem(AUTH_STORAGE_KEYS.THEME, theme);
   }
 
   // Auto-init theme
@@ -200,7 +207,9 @@
     logoutUser,
     requireAuth,
     redirectIfAuthenticated,
-    setupGlobalTheme
+    setupGlobalTheme,
+    applyTheme,
+    toggleTheme
   };
 
 })();

@@ -14,7 +14,13 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 54200,
     "icon": "activity",
     "featured": true,
-    "tags": ["medicine", "health", "clinical", "emergency", "anatomy"],
+    "tags": [
+      "medicine",
+      "health",
+      "clinical",
+      "emergency",
+      "anatomy"
+    ],
     "sampleArticles": [
       {
         "title": "Cardiopulmonary Resuscitation (CPR)",
@@ -24,7 +30,9 @@ window.DEFAULT_KIWIX_CATALOG = [
         "title": "Emergency Wound Care & Antiseptics",
         "snippet": "First response wound management principles: irrigation with clean water, control of arterial bleeding, and prevention of secondary bacterial infection."
       }
-    ]
+    ],
+    "sha256": "7fe416a450fe9f12a4fbc3d6a2acb5c0e0416430d033be4a2a9a94f65f0b0b11",
+    "downloadSource": "https://download.kiwix.org/zim/health/wikimed_en_all_maxi_2024-03.zim"
   },
   {
     "id": "swasthya-hi",
@@ -39,7 +47,12 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 12800,
     "icon": "heart-pulse",
     "featured": true,
-    "tags": ["स्वास्थ्य", "चिकित्सा", "प्राथमिक उपचार", "पोषण"],
+    "tags": [
+      "स्वास्थ्य",
+      "चिकित्सा",
+      "प्राथमिक उपचार",
+      "पोषण"
+    ],
     "sampleArticles": [
       {
         "title": "प्राथमिक चिकित्सा के मूलभूत नियम",
@@ -49,7 +62,9 @@ window.DEFAULT_KIWIX_CATALOG = [
         "title": "स्वच्छ जल एवं संक्रामक रोग नियंत्रण",
         "snippet": "ग्रामीण एवं दूरस्थ क्षेत्रों में जल जनित बीमारियों जैसे हैजा, टाइफाइड से बचाव के उपाय।"
       }
-    ]
+    ],
+    "sha256": "54e3d8fcfe7ee540771e11fa1ed59408cb5945016d8c93e8b6b185613032c6f9",
+    "downloadSource": "https://download.kiwix.org/zim/health/swasthya_hi_all_maxi_2024-01.zim"
   },
   {
     "id": "disaster-prep-en",
@@ -64,7 +79,13 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 4200,
     "icon": "shield-alert",
     "featured": true,
-    "tags": ["survival", "disaster", "emergency", "flood", "earthquake"],
+    "tags": [
+      "survival",
+      "disaster",
+      "emergency",
+      "flood",
+      "earthquake"
+    ],
     "sampleArticles": [
       {
         "title": "Solar Water Disinfection (SODIS) Method",
@@ -74,7 +95,9 @@ window.DEFAULT_KIWIX_CATALOG = [
         "title": "Emergency Go-Bag Checklist (72-Hour Survival)",
         "snippet": "Essential items for immediate evacuation: water ration, emergency blanket, wind-up radio, non-perishable food, and multi-tool."
       }
-    ]
+    ],
+    "sha256": "0bff27030e70ad7997cf34516508650188ce45c934c46c18d0b073bdb0795163",
+    "downloadSource": "https://download.kiwix.org/zim/disaster/disaster_preparedness_en_2024.zim"
   },
   {
     "id": "aapda-prabandhan-hi",
@@ -89,13 +112,21 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 3100,
     "icon": "life-buoy",
     "featured": false,
-    "tags": ["आपदा", "सुरक्षा", "राहत", "बाढ़", "भूकंप"],
+    "tags": [
+      "आपदा",
+      "सुरक्षा",
+      "राहत",
+      "बाढ़",
+      "भूकंप"
+    ],
     "sampleArticles": [
       {
         "title": "भूकंप के दौरान सुरक्षा उपाय",
         "snippet": "Drop, Cover, and Hold On (झुको, ढंको और पकड़ो) तकनीक द्वारा जान-माल की रक्षा।"
       }
-    ]
+    ],
+    "sha256": "8b19cf509a1368df7057e7ecb6aad0e667ab4005915b4b6c685dc983fe885c86",
+    "downloadSource": "https://download.kiwix.org/zim/disaster/aapda_prabandhan_hi_2024.zim"
   },
   {
     "id": "wikipedia-vital-en",
@@ -110,7 +141,12 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 10000,
     "icon": "book-open",
     "featured": true,
-    "tags": ["encyclopedia", "vital", "reference", "knowledge"],
+    "tags": [
+      "encyclopedia",
+      "vital",
+      "reference",
+      "knowledge"
+    ],
     "sampleArticles": [
       {
         "title": "Renewable Energy Technologies",
@@ -120,7 +156,9 @@ window.DEFAULT_KIWIX_CATALOG = [
         "title": "Scientific Method & Empirical Research",
         "snippet": "The systematic observation, measurement, and experimentation underpinning modern scientific discovery."
       }
-    ]
+    ],
+    "sha256": "4b25a5500d3facc41e341c387f46048c5f89d3ca24555bf32e38bc8233037a2d",
+    "downloadSource": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_10000_vital_2024.zim"
   },
   {
     "id": "wikipedia-top-en",
@@ -135,13 +173,20 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 100000,
     "icon": "globe",
     "featured": true,
-    "tags": ["wikipedia", "general", "encyclopedia", "top"],
+    "tags": [
+      "wikipedia",
+      "general",
+      "encyclopedia",
+      "top"
+    ],
     "sampleArticles": [
       {
         "title": "Quantum Mechanics & Wave-Particle Duality",
         "snippet": "Fundamental theory in physics describing physical properties of nature on an atomic scale."
       }
-    ]
+    ],
+    "sha256": "a40d00ecf42a5af3c8961c593b9017c716c0735810b95b4eab356e8d3ed8015c",
+    "downloadSource": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top100k_maxi_2024.zim"
   },
   {
     "id": "wikipedia-hi",
@@ -156,13 +201,19 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 155000,
     "icon": "book-open-check",
     "featured": true,
-    "tags": ["विकिपीडिया", "ज्ञानकोश", "हिंदी"],
+    "tags": [
+      "विकिपीडिया",
+      "ज्ञानकोश",
+      "हिंदी"
+    ],
     "sampleArticles": [
       {
         "title": "भारत का संविधान एवं मूल अधिकार",
         "snippet": "भारतीय संविधान के अनुच्छेद 12 से 35 तक वर्णित छह मौलिक अधिकार और उनके संवैधानिक उपचार।"
       }
-    ]
+    ],
+    "sha256": "cffb30ba481c24ded708e01a8649f6cf16c1b474a0e2b5e5371c6a368c29509e",
+    "downloadSource": "https://download.kiwix.org/zim/wikipedia/wikipedia_hi_all_maxi_2024.zim"
   },
   {
     "id": "phet-sims-en",
@@ -177,13 +228,21 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 125,
     "icon": "atom",
     "featured": true,
-    "tags": ["physics", "simulation", "chemistry", "stem", "interactive"],
+    "tags": [
+      "physics",
+      "simulation",
+      "chemistry",
+      "stem",
+      "interactive"
+    ],
     "sampleArticles": [
       {
         "title": "Circuit Construction Kit (DC & AC)",
         "snippet": "Interactive schematic breadboard simulator allowing users to test Ohm's Law and parallel circuits."
       }
-    ]
+    ],
+    "sha256": "a0adb18b9797801d32cae4ef3ae48ecb9b945a1edd3c11080f1567bbf4a5b7dc",
+    "downloadSource": "https://download.kiwix.org/zim/science/phet_en_interactive_2024.zim"
   },
   {
     "id": "khan-academy-stem",
@@ -198,13 +257,21 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 4800,
     "icon": "flask-conical",
     "featured": false,
-    "tags": ["stem", "math", "physics", "khan academy", "learning"],
+    "tags": [
+      "stem",
+      "math",
+      "physics",
+      "khan academy",
+      "learning"
+    ],
     "sampleArticles": [
       {
         "title": "Calculus: Limits and Derivatives",
         "snippet": "Geometric intuition behind instantaneous rates of change and tangent lines."
       }
-    ]
+    ],
+    "sha256": "abb7eab123538662f8ee7f72b19363a89a5da7e02c636da348da67b8b67bed6a",
+    "downloadSource": "https://download.kiwix.org/zim/science/khanacademy_en_stem_2024.zim"
   },
   {
     "id": "devdocs-tech",
@@ -219,7 +286,13 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 42000,
     "icon": "terminal",
     "featured": true,
-    "tags": ["programming", "developer", "javascript", "python", "docs"],
+    "tags": [
+      "programming",
+      "developer",
+      "javascript",
+      "python",
+      "docs"
+    ],
     "sampleArticles": [
       {
         "title": "Modern JavaScript (ES6+): Promises & Async/Await",
@@ -229,7 +302,9 @@ window.DEFAULT_KIWIX_CATALOG = [
         "title": "Python 3: Standard Library & Concurrency",
         "snippet": "In-depth guide to asyncio, multiprocessing, collections, and typing modules."
       }
-    ]
+    ],
+    "sha256": "f9e8c39079cc301e7ed1fd82d2b265dd9ab873757662e005fc3bde27ec5c388d",
+    "downloadSource": "https://download.kiwix.org/zim/tech/devdocs_en_software_complete_2024.zim"
   },
   {
     "id": "stackoverflow-curated",
@@ -244,13 +319,20 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 150000,
     "icon": "code",
     "featured": false,
-    "tags": ["coding", "debugging", "stack overflow", "algorithms"],
+    "tags": [
+      "coding",
+      "debugging",
+      "stack overflow",
+      "algorithms"
+    ],
     "sampleArticles": [
       {
         "title": "How do I undo the most recent local commits in Git?",
         "snippet": "Comprehensive explanation of git reset --soft, git reset --hard, and recovering HEAD with reflog."
       }
-    ]
+    ],
+    "sha256": "e872f09ee3dfacb49880b35a8be401ce1f02ed43559595e51f4d1412a231dc94",
+    "downloadSource": "https://download.kiwix.org/zim/tech/stackoverflow_en_top_2024.zim"
   },
   {
     "id": "gutenberg-classics",
@@ -265,13 +347,20 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 1000,
     "icon": "feather",
     "featured": false,
-    "tags": ["books", "literature", "philosophy", "gutenberg"],
+    "tags": [
+      "books",
+      "literature",
+      "philosophy",
+      "gutenberg"
+    ],
     "sampleArticles": [
       {
         "title": "Plato's Republic (Benjamin Jowett Translation)",
         "snippet": "Socratic dialogue concerning justice, the order and character of the just city-state, and the just human."
       }
-    ]
+    ],
+    "sha256": "d3f66f9649120f5823f0717562f28db82f292ead303874fb811c96c71bacc98b",
+    "downloadSource": "https://download.kiwix.org/zim/education/gutenberg_en_top1000_2024.zim"
   },
   {
     "id": "world-history-en",
@@ -286,13 +375,20 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 8500,
     "icon": "landmark",
     "featured": true,
-    "tags": ["history", "civilization", "archaeology", "ancient"],
+    "tags": [
+      "history",
+      "civilization",
+      "archaeology",
+      "ancient"
+    ],
     "sampleArticles": [
       {
         "title": "The Indus Valley Civilization (Harappa & Mohenjo-daro)",
         "snippet": "Urban planning, standardized weights, advanced drainage networks, and bronze metallurgy in Bronze Age South Asia."
       }
-    ]
+    ],
+    "sha256": "c1956e26211c27a4ba2c05f3013118db3c953580c1954663ba290c97f48aee83",
+    "downloadSource": "https://download.kiwix.org/zim/history/worldhistory_en_complete_2024.zim"
   },
   {
     "id": "bharat-itihas-hi",
@@ -307,13 +403,20 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 6400,
     "icon": "scroll",
     "featured": false,
-    "tags": ["इतिहास", "भारत", "संस्कृति", "स्वतंत्रता"],
+    "tags": [
+      "इतिहास",
+      "भारत",
+      "संस्कृति",
+      "स्वतंत्रता"
+    ],
     "sampleArticles": [
       {
         "title": "मौर्य साम्राज्य और सम्राट अशोक का धम्म",
-        "snippet": "कलिंग युद्ध के उपरांत सम्राट अशोक द्वारा बौद्ध धर्म का अंगीकरण और शांति का संदेश."
+        "snippet": "कलिंग युद्ध के उपरांत सम्राट अशोक द्वारा बौद्ध धर्म का अंगीकरण और शांति का संदेश।"
       }
-    ]
+    ],
+    "sha256": "8eba53523baa614611b43fc4ed8130b7c500043b979d92038a5763e0b775e23f",
+    "downloadSource": "https://download.kiwix.org/zim/history/bharat_itihas_hi_2024.zim"
   },
   {
     "id": "wikivoyage-global",
@@ -328,13 +431,20 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 31000,
     "icon": "compass",
     "featured": false,
-    "tags": ["travel", "geography", "maps", "culture"],
+    "tags": [
+      "travel",
+      "geography",
+      "maps",
+      "culture"
+    ],
     "sampleArticles": [
       {
         "title": "Himalayan High-Altitude Trekking Protocols",
         "snippet": "Acclimatization schedules, acute mountain sickness prevention, and route planning for remote valleys."
       }
-    ]
+    ],
+    "sha256": "5d457cfe77273c7b03a3de84e9f04995d351c24d6e6f49befd691254ed847b82",
+    "downloadSource": "https://download.kiwix.org/zim/education/wikivoyage_en_all_2024.zim"
   },
   {
     "id": "wikimed-es",
@@ -349,13 +459,19 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 35000,
     "icon": "heart-pulse",
     "featured": false,
-    "tags": ["medicina", "salud", "primeros auxilios"],
+    "tags": [
+      "medicina",
+      "salud",
+      "primeros auxilios"
+    ],
     "sampleArticles": [
       {
         "title": "Protocolo de Primeros Auxilios para Quemaduras",
         "snippet": "Manejo de quemaduras de primer y segundo grado: enfriamiento con agua tibia y vendaje estéril no adherente."
       }
-    ]
+    ],
+    "sha256": "0df94fb795c3e14cf65658466e0ed539fa46472e55cff877796cd1591596d0a3",
+    "downloadSource": "https://download.kiwix.org/zim/health/wikimed_es_all_maxi_2024.zim"
   },
   {
     "id": "wikimed-fr",
@@ -370,13 +486,19 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 33000,
     "icon": "activity",
     "featured": false,
-    "tags": ["médecine", "santé", "secourisme"],
+    "tags": [
+      "médecine",
+      "santé",
+      "secourisme"
+    ],
     "sampleArticles": [
       {
         "title": "Gestion d'Urgence des Traumatismes",
         "snippet": "Stabilisation rachidienne, évaluation de l'état de conscience et hémostase d'urgence."
       }
-    ]
+    ],
+    "sha256": "872354dea8c1f8ecbf4eb944a33a1e6db9b83bd1cbeb754998a94deb654afe6b",
+    "downloadSource": "https://download.kiwix.org/zim/health/wikimed_fr_all_maxi_2024.zim"
   },
   {
     "id": "ted-ed-knowledge",
@@ -391,12 +513,19 @@ window.DEFAULT_KIWIX_CATALOG = [
     "articlesCount": 1100,
     "icon": "lightbulb",
     "featured": false,
-    "tags": ["ted", "education", "ideas", "science"],
+    "tags": [
+      "ted",
+      "education",
+      "ideas",
+      "science"
+    ],
     "sampleArticles": [
       {
         "title": "How the Human Immune System Remembers Pathogens",
         "snippet": "The role of memory B cells and T cells in adaptive immunity and lifelong disease resistance."
       }
-    ]
+    ],
+    "sha256": "7f7313f7f0bbd68a797b625f4b58f028993015d39e3d7174a8cbee379e9dc6e1",
+    "downloadSource": "https://download.kiwix.org/zim/education/ted_ed_en_knowledge_2024.zim"
   }
 ];

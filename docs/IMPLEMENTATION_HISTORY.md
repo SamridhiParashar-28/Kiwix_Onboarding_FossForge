@@ -59,3 +59,27 @@ This document tracks the technical decisions, architecture milestones, and imple
   - Validated Custom ZIM creation and queue integration.
 - **Status**: Completed
 
+---
+
+### Task 3: Backend Completion, Integrity Verification, Resumable Backoff & Dual Automated Testing
+- **Timestamp**: 2026-10-22 07:05
+- **Objective**: Complete end-to-end functionality, resolve theme conflict bugs, implement optional Python FastAPI backend microservice, enforce storage budget overload locks, implement bounded exponential backoff on downloads, add SHA-256 integrity verification, and build automated backend/frontend test suites.
+- **Files Created / Modified**:
+  - `backend/main.py`: Optional companion FastAPI microservice providing catalog validation, integrity checks, and sandboxed storage queries.
+  - `backend/requirements.txt`: Python dependency specification (`fastapi`, `uvicorn`, `pydantic`, `httpx`).
+  - `backend/sync_catalog.py`: Catalog synchronization script for deterministic SHA-256 hashes and download sources.
+  - `launch_backend.bat`: 1-click Windows launcher for the FastAPI service on port 8000.
+  - `js/auth.js`: Made theme toggle listener idempotent, resolving listener collision with `app.js`.
+  - `js/app.js`: Reactive preference updates, storage quota overload safety lock, bounded exponential backoff download retry (1-3 attempts), individual package queue cancellation, and pre-offline verification.
+  - `data/catalog.json` & `js/catalog-data.js`: Populated canonical `sha256` and `downloadSource` URLs across all 18 packages.
+  - `tests/test_backend.py`: 9 automated tests via `unittest` and `TestClient` (100% passing).
+  - `tests/test_frontend_logic.js`: 5 automated test suites via native Node.js test runner (100% passing).
+  - `docs/USER_AND_DEVELOPER_GUIDE.md`: Comprehensive, user-friendly guide for users, evaluators, and developers.
+  - `docs/PROJECT_REPORT.md`: Comprehensive project status report, milestone review, and future roadmap.
+  - `README.md`: Updated with quick start commands, backend instructions, and test runners.
+- **Verification & Testing**:
+  - Verified Python backend tests (`python -m unittest tests/test_backend.py`): 9/9 passed in 0.085s.
+  - Verified Node frontend logic tests (`node --test tests/test_frontend_logic.js`): 5/5 passed in 0.245s.
+  - Verified end-to-end Chromium browser automation with zero console errors.
+- **Status**: Completed & Production Ready
+
