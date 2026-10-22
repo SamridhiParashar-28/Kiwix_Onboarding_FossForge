@@ -87,8 +87,8 @@ Designed specifically for **maximum execution speed, zero build overhead, and pu
 
 ## Quick Start & Running Locally
 
-### Option 1: 1-Click Launch (Windows)
-Double-click `launch.bat` (or `start.bat`) to automatically start the local server and open the application in your default browser at `http://localhost:3000`.
+### Option 1: 1-Click Synchronized Launch (Windows)
+Double-click `start.bat` (or `launch.bat`) to automatically synchronize and start both the optional FastAPI backend (port 8000) and frontend web server (port 3000), then open the application in your default browser at `http://localhost:3000`.
 
 ### Option 2: Python Static Server
 ```bash

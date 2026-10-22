@@ -31,9 +31,9 @@ This guide is designed to be **accessible, clear, and easy for everyone**—whet
 
 ## 1. Quick Start (Get Running in 10 Seconds)
 
-### Option A: Windows 1-Click Launcher (Easiest)
-Simply double-click [`launch.bat`](file:///d:/Aaryamann%20Kapoor/code/Kiwix_Onboarding_FossForge/launch.bat) or [`start.bat`](file:///d:/Aaryamann%20Kapoor/code/Kiwix_Onboarding_FossForge/start.bat) in the root directory.  
-It will automatically detect Python or Node.js, start a local server on port 3000, and open `http://localhost:3000` in your default browser.
+### Option A: Windows 1-Click Synchronized Launcher (Easiest)
+Simply double-click [`start.bat`](file:///d:/Aaryamann%20Kapoor/code/Kiwix_Onboarding_FossForge/start.bat) or [`launch.bat`](file:///d:/Aaryamann%20Kapoor/code/Kiwix_Onboarding_FossForge/launch.bat) in the root directory.  
+It automatically starts both the optional FastAPI backend (at `http://127.0.0.1:8000`) and the frontend web server (at `http://localhost:3000`) synchronized, opening the application directly in your default browser.
 
 ### Option B: Python Command Line
 ```bash
