@@ -88,7 +88,7 @@ Designed specifically for **maximum execution speed, zero build overhead, and pu
 ## Quick Start & Running Locally
 
 ### Option 1: 1-Click Synchronized Launch (Windows)
-Double-click `start.bat` (or `launch.bat`) to automatically synchronize and start both the optional FastAPI backend (port 8000) and frontend web server (port 3000), then open the application in your default browser at `http://localhost:3000`.
+Double-click `start.bat` to automatically detect your environment, synchronize and start both the optional FastAPI backend (port 8000) and frontend web server (port 3000), and open the application in your default browser at `http://localhost:3000`.
 
 ### Option 2: Python Static Server
 ```bash
@@ -117,8 +117,8 @@ pip install -r backend/requirements.txt
 
 ### Run FastAPI Backend
 ```bash
-# Option A: Helper script (Windows)
-launch_backend.bat
+# Option A: Unified script in backend-only mode (Windows)
+start.bat backend
 
 # Option B: Direct uvicorn command
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000

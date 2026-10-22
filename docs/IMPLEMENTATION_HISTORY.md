@@ -45,7 +45,7 @@ This document tracks the technical decisions, architecture milestones, and imple
   - `data/catalog.json`: Kiwix ZIM catalog snapshot spanning Health, Disaster, Wikipedia, STEM, DevDocs, and Literature.
   - `js/catalog-data.js`: Offline guaranteed static catalog fallback (`window.DEFAULT_KIWIX_CATALOG`).
   - `js/app.js`: State manager, theme toggle, recommendation scoring engine, storage budgeting, download simulator with network drop recovery, custom ZIM creator, and interactive offline reader.
-  - `launch.bat` & `start.bat`: One-click double-clickable Windows launcher scripts with server detection.
+  - `start.bat`: One-click double-clickable Windows launcher script with server detection.
 - **Implementation Details & Algorithms**:
   - Multi-factor recommendation matrix scoring packages against user's topic interests, language preferences, and disk budget.
   - Storage quota tracking with manual GB input, presets, `navigator.storage.estimate()` detection, and overload warnings.

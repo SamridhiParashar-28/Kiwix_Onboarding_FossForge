@@ -7,6 +7,13 @@ echo           KIWIX ONBOARDING - ZERO-TO-KNOWLEDGE PIPELINE
 echo               FOSS Forge 2.0 Hackathon - Build with Kiwix
 echo ======================================================================
 echo.
+
+:: Check for mode flags (backend only / frontend only)
+if /i "%~1"=="--backend-only" goto :BACKEND_ONLY
+if /i "%~1"=="backend" goto :BACKEND_ONLY
+if /i "%~1"=="--frontend-only" goto :FRONTEND_ONLY
+if /i "%~1"=="frontend" goto :FRONTEND_ONLY
+
 echo Initializing synchronized Frontend and Backend services...
 echo.
 
@@ -61,3 +68,16 @@ echo Opening index.html directly in your default browser (100%% offline mode)...
 start "" "%~dp0index.html"
 echo Application launched!
 pause
+goto :EOF
+
+:BACKEND_ONLY
+echo Starting FastAPI Backend only at http://127.0.0.1:8000 ...
+echo API Documentation at http://127.0.0.1:8000/docs
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+goto :EOF
+
+:FRONTEND_ONLY
+echo Starting Frontend Server only at http://localhost:3000 ...
+start "" "http://localhost:3000"
+python -m http.server 3000
+goto :EOF
