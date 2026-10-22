@@ -348,6 +348,32 @@
         state.theme = savedTheme;
       }
 
+      // Check if user came from sign-in, sign-up, or requested a fresh start
+      const urlParams = new URLSearchParams(window.location.search);
+      const forceWelcome = urlParams.get('start') === 'welcome' ||
+                           localStorage.getItem('kiwix_start_from_welcome') === 'true';
+
+      const currentUser = window.KiwixAuth ? window.KiwixAuth.getCurrentUser() : null;
+      const currentUserId = currentUser ? currentUser.id : 'anonymous';
+      const lastUserId = localStorage.getItem('kiwix_last_active_user_id');
+
+      // If user came from sign-in/sign-up or switched accounts, start clean from Step 1 (Welcome)
+      if (forceWelcome || (lastUserId && lastUserId !== currentUserId)) {
+        state.currentStep = 1;
+        state.selectedPackageIds = new Set();
+        state.download.isCompleted = false;
+        state.download.packageProgress = {};
+        localStorage.setItem(STORAGE_KEYS.STEP, '1');
+        localStorage.removeItem('kiwix_start_from_welcome');
+        localStorage.removeItem(STORAGE_KEYS.DOWNLOAD_DONE);
+        localStorage.removeItem(STORAGE_KEYS.DOWNLOAD_PROGRESS);
+        localStorage.removeItem(STORAGE_KEYS.SELECTED_PACKAGES);
+        localStorage.setItem('kiwix_last_active_user_id', currentUserId);
+        return;
+      }
+
+      localStorage.setItem('kiwix_last_active_user_id', currentUserId);
+
       const savedStep = localStorage.getItem(STORAGE_KEYS.STEP);
       if (savedStep) {
         const stepNum = parseInt(savedStep, 10);
@@ -408,6 +434,13 @@
       const isDone = localStorage.getItem(STORAGE_KEYS.DOWNLOAD_DONE);
       if (isDone === 'true') {
         state.download.isCompleted = true;
+      }
+
+      // Safeguard: If state says Step 5 but no packages are queued or completed,
+      // reset to Step 1 (Welcome) so the user is never stuck in an empty download screen.
+      if (state.currentStep === 5 && state.selectedPackageIds.size === 0 && !state.download.isCompleted) {
+        state.currentStep = 1;
+        localStorage.setItem(STORAGE_KEYS.STEP, '1');
       }
 
     } catch (e) {

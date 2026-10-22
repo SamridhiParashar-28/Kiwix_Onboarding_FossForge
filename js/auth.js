@@ -53,6 +53,19 @@
     }
   }
 
+  // Reset onboarding session state to start fresh from Welcome (Step 1)
+  function resetOnboardingToWelcome() {
+    try {
+      localStorage.setItem('kiwix_onboarding_step', '1');
+      localStorage.setItem('kiwix_start_from_welcome', 'true');
+      localStorage.removeItem('kiwix_download_completed');
+      localStorage.removeItem('kiwix_download_progress');
+      localStorage.removeItem('kiwix_selected_packages');
+    } catch (e) {
+      console.warn('LocalStorage error while resetting onboarding state:', e);
+    }
+  }
+
   // Register a new user
   function signUpUser(name, email, password) {
     seedDefaultUsers();
@@ -87,6 +100,7 @@
     try {
       localStorage.setItem(AUTH_STORAGE_KEYS.USERS, JSON.stringify(users));
       localStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(newUser));
+      resetOnboardingToWelcome();
       return { success: true, user: newUser };
     } catch (e) {
       return { success: false, error: 'Failed to save account to localStorage.' };
@@ -111,6 +125,7 @@
 
     try {
       localStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+      resetOnboardingToWelcome();
       return { success: true, user: user };
     } catch (e) {
       return { success: false, error: 'Failed to establish session in localStorage.' };
@@ -121,6 +136,7 @@
   function logoutUser() {
     try {
       localStorage.removeItem(AUTH_STORAGE_KEYS.CURRENT_USER);
+      resetOnboardingToWelcome();
     } catch (e) {
       console.warn('Logout error:', e);
     }
@@ -209,7 +225,8 @@
     redirectIfAuthenticated,
     setupGlobalTheme,
     applyTheme,
-    toggleTheme
+    toggleTheme,
+    resetOnboardingToWelcome
   };
 
 })();

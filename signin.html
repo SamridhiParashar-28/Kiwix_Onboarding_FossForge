@@ -43,10 +43,6 @@
 
   <!-- Authentication Script -->
   <script src="js/auth.js"></script>
-  <script>
-    // Redirect already logged-in users directly to Onboarding
-    KiwixAuth.redirectIfAuthenticated();
-  </script>
 </head>
 <body class="h-full flex flex-col justify-between dark-theme transition-colors duration-200">
 
@@ -189,7 +185,7 @@
 
       const res = KiwixAuth.signInUser(email, password);
       if (res.success) {
-        window.location.href = 'onboarding.html';
+        window.location.href = 'onboarding.html?start=welcome';
       } else {
         showError(res.error || 'Invalid email or password.');
       }
@@ -201,7 +197,7 @@
       passInput.value = 'password123';
       const res = KiwixAuth.signInUser('demo@kiwix.org', 'password123');
       if (res.success) {
-        window.location.href = 'onboarding.html';
+        window.location.href = 'onboarding.html?start=welcome';
       }
     });
   </script>

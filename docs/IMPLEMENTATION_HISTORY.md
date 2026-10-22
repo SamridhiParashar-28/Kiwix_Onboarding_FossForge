@@ -83,3 +83,38 @@ This document tracks the technical decisions, architecture milestones, and imple
   - Verified end-to-end Chromium browser automation with zero console errors.
 - **Status**: Completed & Production Ready
 
+---
+
+### Task 4: Welcome Landing Page Preservation & Onboarding Step 1 Resolution
+- **Timestamp**: 2026-10-22 10:20
+- **Objective**: Prevent launcher script and Welcome landing page (`index.html`) from automatically redirecting authenticated users to `onboarding.html`, and ensure that whenever a user launches the app or signs in / signs up, they start at the Welcome step (Step 1) rather than an invalid or stale Step 5 download screen.
+- **Root Cause Analysis**:
+  - `index.html` contained an eager guest-guard script (`KiwixAuth.redirectIfAuthenticated()`) in its `<head>` tag. When `start.bat` launched `http://localhost:3000`, the page immediately redirected active sessions to `onboarding.html`, preventing access to the Welcome landing page.
+  - In `js/app.js`, `state.currentStep` was restored from `localStorage` without resetting on fresh logins or account switches. If a previous run reached Step 5, newly authenticated users were dumped straight into Step 5 ("Building Your Offline Library") with an unpopulated queue.
+- **Files Modified**:
+  - `index.html`: Removed eager `redirectIfAuthenticated()` script. Added dynamic header and hero elements that display user status with "Start Onboarding" and "Logout" without bouncing the user.
+  - `js/auth.js`: Added `resetOnboardingToWelcome()` helper invoked on `signUpUser`, `signInUser`, and `logoutUser`.
+  - `signin.html` & `signup.html`: Updated redirect targets to `onboarding.html?start=welcome`.
+  - `js/app.js`: In `restorePersistedState()`, handled `?start=welcome`, account switches, and added safety guards resetting invalid Step 5 states to Step 1 (Welcome).
+  - `tests/test_frontend_logic.js`: Added automated test suite `Onboarding Step Resolution & Welcome Reset on Sign-In / Sign-Up` (6/6 passing).
+- **Verification & Testing**:
+  - Verified with browser subagent: `start.bat` / `http://localhost:3000` remains on Welcome landing page without redirect.
+  - Verified clicking quick demo or signing in lands directly on Step 1: Welcome (`Welcome to Kiwix`) with Step 5 hidden.
+  - Verified advancement to Step 2: Interests.
+  - Ran automated test suites (`node --test tests/test_frontend_logic.js` and `python -m unittest tests/test_backend.py`): 100% passing.
+- **Status**: Completed & Verified
+
+---
+
+### Task 5: Button Navigation Route Fidelity (Sign In & Sign Up Pages)
+- **Timestamp**: 2026-10-22 10:31
+- **Objective**: Ensure clicking "Sign In" and "Sign Up" / "Get Started" buttons reliably opens `signin.html` and `signup.html` without premature redirection to `onboarding.html`.
+- **Root Cause & Resolution**:
+  - `signin.html` and `signup.html` had eager `KiwixAuth.redirectIfAuthenticated()` calls in their `<head>` scripts, instantly bouncing users with active sessions to `onboarding.html` whenever they attempted to open the authentication portals.
+  - Removed `redirectIfAuthenticated()` from both `signin.html` and `signup.html`.
+  - Streamlined `index.html` navigation and hero CTA links so they directly open `signin.html` and `signup.html` as indicated by the button label.
+  - Automated browser subagent verified all routes open the respective forms cleanly and only advance to `onboarding.html` after form submission or demo sign-in.
+- **Status**: Completed & Verified
+
+
+

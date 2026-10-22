@@ -43,10 +43,6 @@
 
   <!-- Authentication Script -->
   <script src="js/auth.js"></script>
-  <script>
-    // Redirect already logged-in users directly to Onboarding
-    KiwixAuth.redirectIfAuthenticated();
-  </script>
 </head>
 <body class="h-full flex flex-col justify-between dark-theme transition-colors duration-200">
 
@@ -205,8 +201,8 @@
 
       const res = KiwixAuth.signUpUser(name, email, password);
       if (res.success) {
-        // Redirect to Onboarding
-        window.location.href = 'onboarding.html';
+        // Redirect to Onboarding starting at Welcome step
+        window.location.href = 'onboarding.html?start=welcome';
       } else {
         showError(res.error || 'Failed to create account.');
       }

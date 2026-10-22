@@ -43,10 +43,6 @@
 
   <!-- Authentication Script -->
   <script src="js/auth.js"></script>
-  <script>
-    // Redirect already logged-in users directly to Onboarding
-    KiwixAuth.redirectIfAuthenticated();
-  </script>
 </head>
 <body class="h-full flex flex-col dark-theme transition-colors duration-200">
 
@@ -87,16 +83,19 @@
           </svg>
         </button>
 
-        <!-- Sign In Link Button -->
-        <a href="signin.html" class="px-4 py-2 text-xs font-semibold rounded-xl border transition-all hover:border-blue-500" style="background-color: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary)">
-          Sign In
-        </a>
+        <!-- Right Header Actions: Sign In and Get Started -->
+        <div class="flex items-center space-x-3">
+          <!-- Sign In Link Button -->
+          <a href="signin.html" class="px-4 py-2 text-xs font-semibold rounded-xl border transition-all hover:border-blue-500" style="background-color: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary)">
+            Sign In
+          </a>
 
-        <!-- Get Started (Sign Up) CTA -->
-        <a href="signup.html" class="btn-accent px-5 py-2 text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 flex items-center space-x-1.5">
-          <span>Get Started</span>
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-        </a>
+          <!-- Get Started (Sign Up) CTA -->
+          <a href="signup.html" class="btn-accent px-5 py-2 text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 flex items-center space-x-1.5">
+            <span>Get Started</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+          </a>
+        </div>
 
       </div>
 
@@ -126,13 +125,13 @@
 
         <!-- Main Call To Action Buttons -->
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <a href="signup.html" class="btn-accent w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm shadow-xl shadow-blue-500/30 flex items-center justify-center space-x-2">
-            <span>Get Started with Onboarding</span>
+          <a id="hero-get-started-btn" href="signup.html" class="btn-accent w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm shadow-xl shadow-blue-500/30 flex items-center justify-center space-x-2">
+            <span id="hero-get-started-text">Get Started with Onboarding</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
           </a>
 
-          <a href="signin.html" class="w-full sm:w-auto px-7 py-3.5 rounded-xl font-semibold text-sm border transition-all hover:border-blue-500 flex items-center justify-center space-x-2" style="background-color: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary)">
-            <span>Sign In to Existing Account</span>
+          <a id="hero-signin-btn" href="signin.html" class="w-full sm:w-auto px-7 py-3.5 rounded-xl font-semibold text-sm border transition-all hover:border-blue-500 flex items-center justify-center space-x-2" style="background-color: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary)">
+            <span id="hero-signin-text">Sign In to Existing Account</span>
           </a>
 
           <!-- Instant 1-Click Demo Launcher -->
@@ -271,10 +270,10 @@
   </footer>
 
   <script>
-    // Quick Demo button handler: Signs in as demo user and routes to onboarding
+    // Quick Demo button handler: Signs in as demo user and routes to onboarding starting at Welcome step
     document.getElementById('btn-quick-demo-landing').addEventListener('click', () => {
       KiwixAuth.signInUser('demo@kiwix.org', 'password123');
-      window.location.href = 'onboarding.html';
+      window.location.href = 'onboarding.html?start=welcome';
     });
   </script>
 

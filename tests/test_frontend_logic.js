@@ -123,3 +123,45 @@ test('Bounded Exponential Backoff Calculations', (t) => {
   assert.strictEqual(getBackoffSeconds(3), 8, 'Attempt 3 backoff should be 8s');
   assert.strictEqual(getBackoffSeconds(4), null, 'Attempt 4 should be marked exhausted');
 });
+
+test('Onboarding Step Resolution & Welcome Reset on Sign-In / Sign-Up', (t) => {
+  function resolveInitialStep({ savedStep, forceWelcome, lastUserId, currentUserId, selectedPackageCount, isDownloadCompleted }) {
+    if (forceWelcome || (lastUserId && lastUserId !== currentUserId)) {
+      return 1;
+    }
+    let step = savedStep ? parseInt(savedStep, 10) : 1;
+    if (step === 5 && selectedPackageCount === 0 && !isDownloadCompleted) {
+      step = 1;
+    }
+    return step;
+  }
+
+  // 1. Force welcome flag set on sign-in / sign-up -> must always resolve to Step 1 (Welcome)
+  assert.strictEqual(
+    resolveInitialStep({ savedStep: 5, forceWelcome: true, lastUserId: 'user-1', currentUserId: 'user-1', selectedPackageCount: 3, isDownloadCompleted: false }),
+    1,
+    'Sign-in with forceWelcome must start at Step 1 (Welcome)'
+  );
+
+  // 2. Switched user -> must always resolve to Step 1 (Welcome)
+  assert.strictEqual(
+    resolveInitialStep({ savedStep: 4, forceWelcome: false, lastUserId: 'user-old', currentUserId: 'user-new', selectedPackageCount: 2, isDownloadCompleted: false }),
+    1,
+    'User switch must reset to Step 1 (Welcome)'
+  );
+
+  // 3. Corrupted / empty Step 5 state (0 packages) -> must safely fall back to Step 1 (Welcome)
+  assert.strictEqual(
+    resolveInitialStep({ savedStep: 5, forceWelcome: false, lastUserId: 'user-1', currentUserId: 'user-1', selectedPackageCount: 0, isDownloadCompleted: false }),
+    1,
+    'Step 5 with 0 packages and incomplete download must fall back to Step 1 (Welcome)'
+  );
+
+  // 4. Normal mid-onboarding reload (e.g. Step 3) -> preserves Step 3
+  assert.strictEqual(
+    resolveInitialStep({ savedStep: 3, forceWelcome: false, lastUserId: 'user-1', currentUserId: 'user-1', selectedPackageCount: 0, isDownloadCompleted: false }),
+    3,
+    'Normal refresh during Step 3 must preserve Step 3'
+  );
+});
+
