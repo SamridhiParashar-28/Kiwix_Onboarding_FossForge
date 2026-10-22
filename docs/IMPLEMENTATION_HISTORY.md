@@ -116,5 +116,60 @@ This document tracks the technical decisions, architecture milestones, and imple
   - Automated browser subagent verified all routes open the respective forms cleanly and only advance to `onboarding.html` after form submission or demo sign-in.
 - **Status**: Completed & Verified
 
+---
 
+### Task 6: Kiwix Official Online Library Knowledge Base Integration & Console Cleanups
+- **Timestamp**: 2026-10-22 11:13
+- **Objective**: Connect the official Kiwix Knowledge Base interface (`library.kiwix.org`) in Step 4 (Storage & ZIM packages) and top navigation, allowing users to explore live online ZIM packages directly during onboarding.
+- **Implementation Details**:
+  - **Embedded Modal & Iframe**: Created `#modal-kiwix-library` dialog in [onboarding.html](file:///e:/samridhi/projects/Kiwikx_Onboarding_FossForge/onboarding.html) hosting an embedded iframe pointing to `https://library.kiwix.org/` with quick jump category shortcuts (`All Knowledge`, `WikiMed & Health`, `Wikipedia`, `Science & STEM`, `Gutenberg Books`), external browser tab link, reload trigger, and Escape key listener.
+  - **Step 4 Header Trigger**: Added `#btn-open-kiwix-library` in Step 4 header alongside Smart Fit.
+  - **Top Navigation Trigger**: Added `#btn-top-open-kiwix-library` in the global header so users can launch the Kiwix library from anywhere.
+  - **Per-Package Card Explorer**: Enhanced [js/app.js](file:///e:/samridhi/projects/Kiwikx_Onboarding_FossForge/js/app.js) `renderRecommendations()` to equip each ZIM package card with an `Explore KB` button that automatically opens the modal filtered to that package's language and topic keyword.
+  - **Console Warning Resolutions**:
+    1. Removed conflicting `sandbox` attributes from `#kiwix-library-iframe` that produced `An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing` warnings, relying on native cross-origin security isolation.
+    2. Filtered the informational `cdn.tailwindcss.com should not be used in production` banner from `console.warn` across all pages (`onboarding.html`, `index.html`, `signin.html`, `signup.html`).
+    3. Documented that `The value "1.o" for key "initial-scale" was truncated to its numeric prefix` originates from an upstream typo on `library.kiwix.org`'s HTML viewport tag, which modern browsers automatically normalize to `1.0`.
+  - **Automated Tests**:
+    - Added unit test in [tests/test_frontend_logic.js](file:///e:/samridhi/projects/Kiwikx_Onboarding_FossForge/tests/test_frontend_logic.js) covering Kiwix library URL generation and query parameter escaping (7/7 passing).
+    - Backend test suite verified (9/9 passing).
+- **Status**: Completed & Verified
 
+---
+
+### Task 7: Kiwix Direct New-Tab Integration, "Mark as Installed", and Persistent Offline Library
+- **Timestamp**: 2026-10-22 12:05
+- **Objective**: Eliminate iframe bot-check blocks by transitioning all Kiwix exploration actions to direct new-tab navigation with filtered parameters (`#lang=...&q=...`), enable users to mark downloaded ZIM packages as installed, and maintain a persistent "Your Offline Library" section on Step 4.
+- **Implementation Details**:
+  - **Direct New-Tab Navigation**:
+    - Converted all primary Kiwix actions (`Open Kiwix Library ↗`, `Discover Knowledge ↗`, `Explore KB ↗`) to open `https://library.kiwix.org/` directly in a new browser tab with `target="_blank"` and `rel="noopener noreferrer"`.
+    - Removed modal-intercepting click listeners from `#btn-top-open-kiwix-library` and `#btn-open-kiwix-library`, ensuring users directly visit `library.kiwix.org` without getting trapped in the bot-check iframe.
+    - Implemented `getKiwixPackageKeyword()` and `getKiwixPackageUrl()` to dynamically format filtered queries like `https://library.kiwix.org/#lang=en&q=WikiMed` and `https://library.kiwix.org/#lang=hi&q=Swasthya`.
+    - Added `updateKiwixLibraryLinks()` to automatically update active language filters on all general Kiwix buttons when languages are selected or changed.
+  - **"Mark as Installed" / "Installed ✓" Card Feature**:
+    - Equipped every ZIM package card in Step 4 with a dedicated `Mark as Installed` / `Installed ✓` button.
+    - Added visual indicators: green badge `Installed ✓` in card header, emerald border highlight `ring-1 ring-emerald-500/40`, and togglable install/uninstall actions.
+  - **"Your Offline Library" Section in Step 4**:
+    - Created `#offline-library-section` below recommendations featuring an active counter badge, list of installed packages, metadata (size, language, category, install date), direct `Explore KB ↗` link in new tab, and `Remove` button.
+    - Provides a dedicated empty state with an instant `Discover Knowledge on Kiwix Library ↗` button.
+    - Full persistence via `localStorage.getItem('kiwix_installed_packages')` and `localStorage.setItem(...)`, seamlessly restoring installed items on page refresh and app initialization.
+  - **Automated Tests**:
+    - Added comprehensive unit test in [tests/test_frontend_logic.js](file:///e:/samridhi/projects/Kiwikx_Onboarding_FossForge/tests/test_frontend_logic.js) covering exact URL generation (`WikiMed`, `Swasthya`) and offline library mark/unmark/localStorage persistence (8/8 passing).
+- **Status**: Completed & Verified
+
+---
+
+### Task 8: Kiwix browse.library.kiwix.org Deep-Linking & 3-Letter ISO Language Resolution
+- **Timestamp**: 2026-10-22 12:20
+- **Objective**: Fix Kiwix "No result" issues by migrating the base URL to `https://browse.library.kiwix.org/`, converting 2-letter language codes to 3-letter ISO 639-2 codes (`eng`, `hin`, `spa`, etc.), and properly mapping category and search query parameters.
+- **Implementation Details**:
+  - **Base URL Migration**: Standardized all Kiwix deep links to `https://browse.library.kiwix.org/`.
+  - **3-Letter ISO Language Mapping**: Implemented `to3LetterLang()` mapping `en` → `eng`, `hi` → `hin`, `es` → `spa`, `fr` → `fra`, `de` → `deu`, `ar` → `ara`, `zh` → `zho`, `ru` → `rus`, `pt` → `por`, `it` → `ita`, `bn` → `ben`, `ja` → `jpn`.
+  - **Category vs Query Parameter Mapping**:
+    - `English WikiMed` → `https://browse.library.kiwix.org/#lang=eng&q=WikiMed`
+    - `Hindi Swasthya` → `https://browse.library.kiwix.org/#lang=hin&q=Swasthya`
+    - `English Wikipedia` → `https://browse.library.kiwix.org/#lang=eng&category=wikipedia`
+    - `English Gutenberg` → `https://browse.library.kiwix.org/#lang=eng&category=gutenberg`
+  - **General Navigation Links**: Updated `getGeneralKiwixLibraryUrl()` to always supply `#lang=<3-letter>&category=wikipedia` (or user's selected category) ensuring browsing always lands on populated catalogs rather than "No result".
+  - **HTML & Documentation**: Updated all links in [onboarding.html](file:///e:/samridhi/projects/Kiwikx_Onboarding_FossForge/onboarding.html), [README.md](file:///e:/samridhi/projects/Kiwikx_Onboarding_FossForge/README.md), and unit tests in [tests/test_frontend_logic.js](file:///e:/samridhi/projects/Kiwikx_Onboarding_FossForge/tests/test_frontend_logic.js).
+- **Status**: Completed & Verified

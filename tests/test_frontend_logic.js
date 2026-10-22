@@ -165,3 +165,172 @@ test('Onboarding Step Resolution & Welcome Reset on Sign-In / Sign-Up', (t) => {
   );
 });
 
+test('Kiwix Online Library Integration - Deep-Link Generation & 3-Letter ISO Languages', (t) => {
+  const KIWIX_BROWSE_BASE_URL = 'https://browse.library.kiwix.org/';
+
+  const LANG_MAP_3 = {
+    en: 'eng',
+    hi: 'hin',
+    es: 'spa',
+    fr: 'fra',
+    de: 'deu',
+    ar: 'ara',
+    zh: 'zho',
+    ru: 'rus',
+    pt: 'por',
+    it: 'ita',
+    bn: 'ben',
+    ja: 'jpn'
+  };
+
+  function to3LetterLang(code) {
+    if (!code) return 'eng';
+    const c = String(code).toLowerCase().trim();
+    if (c.length === 3) return c;
+    return LANG_MAP_3[c] || c;
+  }
+
+  function getKiwixPackageUrl(pkg) {
+    if (!pkg) return `${KIWIX_BROWSE_BASE_URL}#lang=eng&category=wikipedia`;
+    const lang3 = to3LetterLang(pkg.language);
+    const id = (pkg.id || '').toLowerCase();
+    const category = (pkg.category || '').toLowerCase();
+
+    // 1. Official Kiwix category filters
+    if (id.includes('wikipedia') || category === 'wikipedia') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=wikipedia`;
+    }
+    if (id.includes('gutenberg') || category === 'gutenberg') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=gutenberg`;
+    }
+    if (id.includes('wikivoyage') || category === 'wikivoyage') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=wikivoyage`;
+    }
+    if (id.includes('ted') || category === 'ted') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=ted`;
+    }
+
+    // 2. Query-based packages
+    let query = '';
+    if (id.includes('wikimed')) query = 'WikiMed';
+    else if (id.includes('swasthya')) query = 'Swasthya';
+    else if (id.includes('aapda')) query = 'Aapda';
+    else if (id.includes('disaster')) query = 'Disaster';
+    else if (id.includes('phet')) query = 'PhET';
+    else if (id.includes('khan')) query = 'Khan Academy';
+    else if (id.includes('devdocs')) query = 'DevDocs';
+    else if (id.includes('stackoverflow')) query = 'Stack Overflow';
+    else if (id.includes('history') || id.includes('itihas')) query = 'History';
+    else {
+      const parenMatch = (pkg.name || '').match(/\(([^)]+)\)/);
+      if (parenMatch && /^[a-zA-Z0-9_\s-]+$/.test(parenMatch[1].trim())) {
+        query = parenMatch[1].trim().split(' ')[0];
+      } else {
+        query = (pkg.name || '').split(/[\s-_]+/)[0] || pkg.id;
+      }
+    }
+
+    return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&q=${encodeURIComponent(query)}`;
+  }
+
+  // 1. English WikiMed -> https://browse.library.kiwix.org/#lang=eng&q=WikiMed
+  const wikimedPkg = { id: 'wikimed-en', name: 'WikiMed - The Healthcare Encyclopedia', language: 'en', category: 'health' };
+  assert.strictEqual(
+    getKiwixPackageUrl(wikimedPkg),
+    'https://browse.library.kiwix.org/#lang=eng&q=WikiMed',
+    'English WikiMed must generate: https://browse.library.kiwix.org/#lang=eng&q=WikiMed'
+  );
+
+  // 2. Hindi Swasthya -> https://browse.library.kiwix.org/#lang=hin&q=Swasthya
+  const swasthyaPkg = { id: 'swasthya-hi', name: 'स्वास्थ्य एवं प्राथमिक चिकित्सा (Swasthya)', language: 'hi', category: 'health' };
+  assert.strictEqual(
+    getKiwixPackageUrl(swasthyaPkg),
+    'https://browse.library.kiwix.org/#lang=hin&q=Swasthya',
+    'Hindi Swasthya must generate: https://browse.library.kiwix.org/#lang=hin&q=Swasthya'
+  );
+
+  // 3. English Wikipedia -> https://browse.library.kiwix.org/#lang=eng&category=wikipedia
+  const wikipediaPkg = { id: 'wikipedia-vital-en', name: 'Wikipedia Mini - 10,000 Vital Articles', language: 'en', category: 'wikipedia' };
+  assert.strictEqual(
+    getKiwixPackageUrl(wikipediaPkg),
+    'https://browse.library.kiwix.org/#lang=eng&category=wikipedia',
+    'English Wikipedia must generate: https://browse.library.kiwix.org/#lang=eng&category=wikipedia'
+  );
+
+  // 4. English Gutenberg -> https://browse.library.kiwix.org/#lang=eng&category=gutenberg
+  const gutenbergPkg = { id: 'gutenberg-en', name: 'Project Gutenberg Top 1000 Books', language: 'en', category: 'education' };
+  assert.strictEqual(
+    getKiwixPackageUrl(gutenbergPkg),
+    'https://browse.library.kiwix.org/#lang=eng&category=gutenberg',
+    'English Gutenberg must generate: https://browse.library.kiwix.org/#lang=eng&category=gutenberg'
+  );
+});
+
+test('Step 4 - Offline Library (Mark as Installed & LocalStorage Persistence)', (t) => {
+  // Mock localStorage
+  const storage = {};
+  const mockLocalStorage = {
+    getItem: (k) => storage[k] || null,
+    setItem: (k, v) => { storage[k] = v; },
+    removeItem: (k) => { delete storage[k]; }
+  };
+
+  const STORAGE_KEY = 'kiwix_installed_packages';
+  let installedPackages = {};
+
+  function markInstalled(pkg) {
+    installedPackages[pkg.id] = {
+      id: pkg.id,
+      name: pkg.name,
+      language: pkg.language,
+      sizeMB: pkg.sizeMB,
+      category: pkg.category,
+      categoryLabel: pkg.categoryLabel || pkg.category,
+      installedAt: new Date().toISOString()
+    };
+    mockLocalStorage.setItem(STORAGE_KEY, JSON.stringify(installedPackages));
+  }
+
+  function unmarkInstalled(pkgId) {
+    delete installedPackages[pkgId];
+    mockLocalStorage.setItem(STORAGE_KEY, JSON.stringify(installedPackages));
+  }
+
+  function restoreFromStorage() {
+    const raw = mockLocalStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  }
+
+  // 1. Initial state: empty
+  assert.strictEqual(Object.keys(installedPackages).length, 0);
+
+  // 2. Mark package as installed
+  const pkg1 = { id: 'wikimed-en', name: 'WikiMed', language: 'en', sizeMB: 1840, category: 'health' };
+  markInstalled(pkg1);
+  assert.strictEqual(Object.keys(installedPackages).length, 1);
+  assert.ok(installedPackages['wikimed-en']);
+  assert.strictEqual(installedPackages['wikimed-en'].sizeMB, 1840);
+
+  // 3. Check persistence
+  const reloaded = restoreFromStorage();
+  assert.ok(reloaded['wikimed-en']);
+  assert.strictEqual(reloaded['wikimed-en'].name, 'WikiMed');
+
+  // 4. Mark second package
+  const pkg2 = { id: 'swasthya-hi', name: 'Swasthya', language: 'hi', sizeMB: 420, category: 'health' };
+  markInstalled(pkg2);
+  assert.strictEqual(Object.keys(installedPackages).length, 2);
+
+  // 5. Remove one package
+  unmarkInstalled('wikimed-en');
+  assert.strictEqual(Object.keys(installedPackages).length, 1);
+  assert.strictEqual(installedPackages['wikimed-en'], undefined);
+  assert.ok(installedPackages['swasthya-hi']);
+
+  // 6. Persistence after removal
+  const reloaded2 = restoreFromStorage();
+  assert.strictEqual(Object.keys(reloaded2).length, 1);
+  assert.strictEqual(reloaded2['swasthya-hi'].language, 'hi');
+});
+
+

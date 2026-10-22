@@ -58,13 +58,9 @@ When users first install Kiwix, they encounter an empty library coupled with an 
 - [x] **Explicit Bandwidth & Time Modeling**: Pre-calculated download ETA with clearly displayed connection assumptions (default: 10 Mbps, user-adjustable).
 - [x] **Resumable Download Simulation**: Byte-level download progress tracking, pause/resume capability, and automated retry backoff upon simulated connection dropouts.
 - [x] **Offline-Ready State Verification**: Visual indicator verifying that package archives have passed size and integrity checks and are ready for local reading.
-
-### Stretch Goals (Optional Enhancements)
-
-- [ ] **Direct OPDS Catalog Synchronization**: Optional live sync with Kiwix's online OPDS feed when an active connection is detected.
-- [ ] **Native Storage Access Framework (SAF) Hook**: Direct disk persistence targeting custom offline directories on desktop or mobile.
-- [ ] **Kiwix Hotspot / P2P Local Discovery**: Detection of local Kiwix server nodes over mDNS/LAN to download packages without WAN usage.
-- [ ] **Delta Update Notifications**: Tracking version changes in existing ZIM packages to prompt lightweight differential updates.
+- [x] **Official Kiwix Deep-Linking Integration**: Direct, new-tab deep links to `browse.library.kiwix.org` formatted with 3-letter ISO language codes (e.g., `eng`, `hin`) and targeted category/search filters (`#lang=eng&q=WikiMed`, `#lang=hin&q=Swasthya`, `#lang=eng&category=wikipedia`, `#lang=eng&category=gutenberg`) without iframe bot-check blocking.
+- [x] **"Mark as Installed" & "Your Offline Library"**: Instant 1-click package install tracking on every ZIM card, featuring persistent local storage (`kiwix_installed_packages`), visual badges, and a dedicated Step 4 offline library manager with package removal and direct links.
+- [x] **User Authentication & Session Management**: Dedicated Sign In and Sign Up portals (`signin.html`, `signup.html`), 1-click demo login (`demo@kiwix.org`), and persistent user session management that preserves the first-run welcome flow.
 
 ---
 
@@ -142,7 +138,7 @@ python -m unittest tests/test_backend.py
 ```bash
 node --test tests/test_frontend_logic.js
 ```
-*Tests catalog schemas, recommendation scoring algorithms, storage quota budgeting, download time calculations, and bounded exponential backoff.*
+*Tests catalog schemas, recommendation scoring algorithms, storage quota budgeting, download time calculations, bounded exponential backoff, browse.library.kiwix.org 3-letter ISO deep-link generation, and offline library localStorage persistence.*
 
 ---
 

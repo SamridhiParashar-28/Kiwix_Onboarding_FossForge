@@ -13,6 +13,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS via CDN -->
+  <script>
+    (function() {
+      const _orig = console.warn;
+      console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+        _orig.apply(console, args);
+      };
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -76,6 +85,13 @@
       <!-- Header Actions: User Profile Badge, Custom ZIM, Theme Switcher, Reset, Logout -->
       <div class="flex items-center space-x-2 sm:space-x-3">
         
+        <!-- Open Kiwix Online Library in Tab -->
+        <a id="btn-top-open-kiwix-library" href="https://browse.library.kiwix.org/#lang=eng&category=wikipedia" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Open official Kiwix Knowledge Base in a new tab (browse.library.kiwix.org)">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          <span class="hidden md:inline">Open Kiwix Library ↗</span>
+          <span class="md:hidden">Kiwix ↗</span>
+        </a>
+
         <!-- Create Custom ZIM Button -->
         <button id="btn-open-custom-zim" class="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all hover:border-blue-500" style="background-color: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary)">
           <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -582,6 +598,18 @@
             <p class="text-sm mt-1" style="color: var(--text-secondary)">Specify your device storage quota and select curated ZIM packages for your library.</p>
           </div>
           <div class="flex items-center space-x-2">
+            <!-- Open Official Kiwix Knowledge Base directly in new tab -->
+            <a id="btn-open-kiwix-library" href="https://browse.library.kiwix.org/#lang=eng&category=wikipedia" target="_blank" rel="noopener noreferrer" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500 flex items-center space-x-1.5 transition-all shadow-md shadow-emerald-500/20" title="Open official Kiwix Knowledge Base in a new tab">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+              <span>Open Kiwix Library ↗</span>
+            </a>
+
+            <!-- Discover Knowledge Button -->
+            <a id="btn-discover-knowledge-step4" href="https://browse.library.kiwix.org/#lang=eng&category=wikipedia" target="_blank" rel="noopener noreferrer" class="btn-discover-knowledge px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white flex items-center space-x-1.5 transition-all" title="Discover knowledge packages on browse.library.kiwix.org">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+              <span>Discover Knowledge ↗</span>
+            </a>
+
             <!-- Smart Auto-Select Button -->
             <button id="btn-smart-curate" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 flex items-center space-x-1.5 transition-all">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -695,6 +723,51 @@
           <button id="btn-reset-rec-filters" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20 hover:bg-blue-500/20">
             Show All Available Packages
           </button>
+        </div>
+
+        <!-- ===== YOUR OFFLINE LIBRARY ===== -->
+        <div id="offline-library-section" class="kiwix-card rounded-2xl p-5 sm:p-6 space-y-4 border-t-2 border-emerald-500/30" style="background: linear-gradient(135deg, rgba(16,185,129,0.04) 0%, transparent 60%)">
+
+          <!-- Section Header -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+              </div>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h3 class="font-bold text-base" style="color: var(--text-primary)">Your Offline Library</h3>
+                  <span id="offline-library-count" class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-slate-600/40 text-slate-400">0</span>
+                </div>
+                <p class="text-xs mt-0.5" style="color: var(--text-muted)">Packages you've downloaded from the official Kiwix Library and marked as installed.</p>
+              </div>
+            </div>
+            <a id="offline-library-add-more" href="https://browse.library.kiwix.org/#lang=eng&category=wikipedia" target="_blank" rel="noopener noreferrer" class="btn-discover-knowledge hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all" title="Discover more ZIM packages at browse.library.kiwix.org">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              <span>Discover Knowledge ↗</span>
+            </a>
+          </div>
+
+          <!-- Installed Packages List (populated by JS) -->
+          <div id="offline-library-list" class="hidden space-y-2">
+            <!-- Items injected by renderOfflineLibrary() -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="offline-library-empty" class="flex flex-col items-center py-6 space-y-3 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-slate-700/15 flex items-center justify-center">
+              <svg class="w-7 h-7 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold" style="color: var(--text-primary)">No packages installed yet</p>
+              <p class="text-xs mt-1 max-w-sm mx-auto" style="color: var(--text-muted)">Click <strong>Explore KB ↗</strong> on any package above to browse and download from Kiwix Library, then click <strong>Mark as Installed</strong> to track it here.</p>
+            </div>
+            <a id="btn-discover-knowledge-empty" href="https://browse.library.kiwix.org/#lang=eng&category=wikipedia" target="_blank" rel="noopener noreferrer" class="btn-discover-knowledge inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500 shadow-md shadow-emerald-500/20 transition-all">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+              <span>Discover Knowledge on Kiwix Library ↗</span>
+            </a>
+          </div>
+
         </div>
 
         <!-- Navigation Buttons -->
@@ -1077,6 +1150,82 @@
           </div>
         </div>
 
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL: OFFICIAL KIWIX ONLINE LIBRARY (LIBRARY.KIWIX.ORG) ================= -->
+  <div id="modal-kiwix-library" class="fixed inset-0 z-50 hidden flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md">
+    <div class="kiwix-card rounded-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden shadow-2xl relative border" style="border-color: var(--border-color); background-color: var(--bg-surface);">
+      
+      <!-- Modal Header Bar -->
+      <div class="px-5 py-3.5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style="border-color: var(--border-color); background-color: var(--bg-surface-alt)">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="font-bold text-sm sm:text-base" style="color: var(--text-primary)">Official Kiwix Online Library</h3>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Connected: browse.library.kiwix.org</span>
+              </span>
+            </div>
+            <p class="text-[11px]" style="color: var(--text-muted)">Live interactive knowledge base browser & catalog</p>
+          </div>
+        </div>
+
+        <!-- Header Actions: External Link, Reload, Close -->
+        <div class="flex items-center space-x-2 self-end sm:self-auto">
+          <a id="kiwix-iframe-external-link" href="https://browse.library.kiwix.org/#lang=eng&category=wikipedia" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all hover:border-blue-500 flex items-center space-x-1" style="background-color: var(--bg-surface); border-color: var(--border-color); color: var(--text-primary)" title="Open in new browser tab">
+            <span>Open in Tab</span>
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </a>
+
+          <button id="btn-reload-kiwix-iframe" class="p-1.5 rounded-lg border transition-all hover:border-blue-500" style="background-color: var(--bg-surface); border-color: var(--border-color); color: var(--text-muted)" title="Refresh Kiwix Library">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          </button>
+
+          <button id="btn-close-kiwix-library" class="p-1.5 rounded-lg border transition-all hover:text-red-500 hover:border-red-500/40" style="background-color: var(--bg-surface); border-color: var(--border-color); color: var(--text-muted)" title="Close Library">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Category Shortcuts Bar -->
+      <div class="px-4 py-2 border-b flex items-center space-x-2 overflow-x-auto text-xs" style="border-color: var(--border-color); background-color: var(--bg-surface)">
+        <span class="text-[11px] font-semibold text-slate-400 whitespace-nowrap">Jump to:</span>
+        <button class="kiwix-kb-quick-filter px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors hover:border-emerald-500" data-query="" style="border-color: var(--border-color); color: var(--text-primary)">All Knowledge</button>
+        <button class="kiwix-kb-quick-filter px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors hover:border-emerald-500" data-query="wikimed" style="border-color: var(--border-color); color: var(--text-primary)">WikiMed & Health</button>
+        <button class="kiwix-kb-quick-filter px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors hover:border-emerald-500" data-query="wikipedia" style="border-color: var(--border-color); color: var(--text-primary)">Wikipedia</button>
+        <button class="kiwix-kb-quick-filter px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors hover:border-emerald-500" data-query="science" style="border-color: var(--border-color); color: var(--text-primary)">Science & STEM</button>
+        <button class="kiwix-kb-quick-filter px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors hover:border-emerald-500" data-query="gutenberg" style="border-color: var(--border-color); color: var(--text-primary)">Gutenberg Books</button>
+      </div>
+
+      <!-- Iframe Body & Loading Spinner -->
+      <div class="flex-1 relative w-full h-full bg-slate-900 overflow-hidden">
+        <div id="kiwix-iframe-spinner" class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900/90 text-slate-200 space-y-3">
+          <svg class="animate-spin w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          <span class="text-xs font-mono text-emerald-400">Connecting to official Kiwix Library (library.kiwix.org)...</span>
+        </div>
+
+        <iframe id="kiwix-library-iframe" src="about:blank" class="w-full h-full border-0" allow="fullscreen" loading="lazy"></iframe>
+      </div>
+
+      <!-- Modal Footer Info Bar -->
+      <div class="px-5 py-2.5 border-t flex flex-col sm:flex-row items-center justify-between text-xs gap-2" style="border-color: var(--border-color); background-color: var(--bg-surface-alt); color: var(--text-muted)">
+        <div class="flex items-center space-x-2">
+          <span class="text-emerald-500">ℹ️</span>
+          <span>Browsing official live Kiwix repository. Packages can be selected for local offline packaging.</span>
+        </div>
+        <div class="text-[11px] font-mono">
+          <span>Powered by Kiwix OPDS & Web Engine</span>
+        </div>
       </div>
 
     </div>

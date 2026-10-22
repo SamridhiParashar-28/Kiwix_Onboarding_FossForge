@@ -19,7 +19,8 @@
     CUSTOM_ZIMS: 'kiwix_custom_zims',
     THEME: 'kiwix_theme',
     DOWNLOAD_DONE: 'kiwix_download_completed',
-    DOWNLOAD_PROGRESS: 'kiwix_download_progress'
+    DOWNLOAD_PROGRESS: 'kiwix_download_progress',
+    INSTALLED_PACKAGES: 'kiwix_installed_packages'
   };
 
   const state = {
@@ -36,6 +37,7 @@
     backendAvailable: false,
     backendBaseUrl: 'http://127.0.0.1:8000',
     deviceStorageInfo: null,
+    installedPackages: {}, // id -> { id, name, language, sizeMB, installedAt }
     download: {
       active: false,
       paused: false,
@@ -122,7 +124,11 @@
     step4ProceedSummary: document.getElementById('step4-proceed-summary'),
     btnBackStep4: document.getElementById('btn-back-step-4'),
     btnNextStep4: document.getElementById('btn-next-step-4'),
-    // Step 5: Download & Offline Ready
+    // Offline Library (Installed Packages)
+    offlineLibrarySection: document.getElementById('offline-library-section'),
+    offlineLibraryList: document.getElementById('offline-library-list'),
+    offlineLibraryEmpty: document.getElementById('offline-library-empty'),
+    offlineLibraryCount: document.getElementById('offline-library-count'),
     downloadActiveState: document.getElementById('download-active-state'),
     offlineReadyState: document.getElementById('offline-ready-state'),
     speedSelector: document.getElementById('speed-selector'),
@@ -184,6 +190,15 @@
     readerArticleTitle: document.getElementById('reader-article-title'),
     readerArticleZim: document.getElementById('reader-article-zim'),
     readerArticleBody: document.getElementById('reader-article-body'),
+    // Modal: Kiwix Online Library (library.kiwix.org)
+    btnTopOpenKiwixLibrary: document.getElementById('btn-top-open-kiwix-library'),
+    btnOpenKiwixLibrary: document.getElementById('btn-open-kiwix-library'),
+    modalKiwixLibrary: document.getElementById('modal-kiwix-library'),
+    btnCloseKiwixLibrary: document.getElementById('btn-close-kiwix-library'),
+    btnReloadKiwixIframe: document.getElementById('btn-reload-kiwix-iframe'),
+    kiwixIframeExternalLink: document.getElementById('kiwix-iframe-external-link'),
+    kiwixLibraryIframe: document.getElementById('kiwix-library-iframe'),
+    kiwixIframeSpinner: document.getElementById('kiwix-iframe-spinner'),
     // Toast Container
     toastContainer: document.getElementById('toast-container')
   };
@@ -202,6 +217,8 @@
     renderLanguagesUI();
     updateStorageMeter();
     renderRecommendations();
+    renderOfflineLibrary();
+    updateKiwixLibraryLinks();
     probeBackendHealth();
   }
 
@@ -431,6 +448,14 @@
         }
       }
 
+      const savedInstalled = localStorage.getItem(STORAGE_KEYS.INSTALLED_PACKAGES);
+      if (savedInstalled) {
+        const parsed = JSON.parse(savedInstalled);
+        if (parsed && typeof parsed === 'object') {
+          state.installedPackages = parsed;
+        }
+      }
+
       const isDone = localStorage.getItem(STORAGE_KEYS.DOWNLOAD_DONE);
       if (isDone === 'true') {
         state.download.isCompleted = true;
@@ -461,6 +486,7 @@
       if (state.download.packageProgress && Object.keys(state.download.packageProgress).length > 0) {
         localStorage.setItem(STORAGE_KEYS.DOWNLOAD_PROGRESS, JSON.stringify(state.download.packageProgress));
       }
+      localStorage.setItem(STORAGE_KEYS.INSTALLED_PACKAGES, JSON.stringify(state.installedPackages));
     } catch (e) {
       console.warn('LocalStorage save error:', e);
     }
@@ -546,10 +572,12 @@
     saveStateToStorage();
     updateStepperUI();
 
-    // If entering Step 4, trigger recommendation re-score and storage calculation
+    // If entering Step 4, trigger recommendation re-score, storage calculation, and offline library
     if (targetStep === 4) {
       renderRecommendations();
       updateStorageMeter();
+      renderOfflineLibrary();
+      updateKiwixLibraryLinks();
     }
 
     // If entering Step 5, start or restore download
@@ -704,6 +732,7 @@
     // Reactively update recommendations and storage meter immediately
     renderRecommendations();
     updateStorageMeter();
+    updateKiwixLibraryLinks();
   }
 
   function filterLanguagesBySearch(query) {
@@ -957,12 +986,13 @@
 
       visibleCount++;
       const isSelected = state.selectedPackageIds.has(pkg.id);
+      const isInstalled = !!state.installedPackages[pkg.id];
       const isMatch = state.selectedInterests.has(pkg.category) && state.selectedLanguages.has(pkg.language);
       const exceedsBudget = !isSelected && (pkg.sizeMB > remainingMB);
       const excessAmountMB = exceedsBudget ? (pkg.sizeMB - remainingMB) : 0;
 
       const card = document.createElement('div');
-      card.className = `kiwix-card rounded-xl p-4 sm:p-5 flex flex-col justify-between transition-all cursor-pointer relative ${isSelected ? 'kiwix-card-selected' : ''}`;
+      card.className = `kiwix-card rounded-xl p-4 sm:p-5 flex flex-col justify-between transition-all cursor-pointer relative ${isSelected ? 'kiwix-card-selected' : ''} ${isInstalled ? 'ring-1 ring-emerald-500/30' : ''}`;
       card.setAttribute('data-package-id', pkg.id);
 
       const sizeDisplay = pkg.sizeMB >= 1024 ? `${(pkg.sizeMB / 1024).toFixed(2)} GB` : `${pkg.sizeMB} MB`;
@@ -974,6 +1004,7 @@
           <div class="flex items-center justify-between mb-2.5">
             <div class="flex items-center space-x-1.5 flex-wrap gap-1">
               ${pkg.isCustom ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/30">Custom ZIM</span>` : ''}
+              ${isInstalled ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg><span>Installed</span></span>` : ''}
               ${isMatch ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-500 border border-blue-500/30">★ Top Match</span>` : ''}
               ${exceedsBudget ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30" title="Adding this package will exceed your storage budget by ${excessAmountMB >= 1024 ? (excessAmountMB/1024).toFixed(2) + ' GB' : excessAmountMB + ' MB'}">Exceeds Budget (+${excessAmountMB >= 1024 ? (excessAmountMB/1024).toFixed(2) + ' GB' : excessAmountMB + ' MB'})</span>` : ''}
               <span class="text-[10px] font-medium px-2 py-0.5 rounded-full border" style="border-color: var(--border-color); color: var(--text-muted)">${pkg.categoryLabel || pkg.category}</span>
@@ -991,19 +1022,52 @@
           <p class="text-xs leading-relaxed line-clamp-2" style="color: var(--text-secondary)">${pkg.description}</p>
         </div>
 
-        <!-- Footer specs & select button -->
-        <div class="mt-4 pt-3 border-t flex items-center justify-between text-xs" style="border-color: var(--border-color)">
+        <!-- Footer specs & action buttons -->
+        <div class="mt-4 pt-3 border-t flex flex-wrap items-center justify-between gap-2 text-xs" style="border-color: var(--border-color)">
           <div class="flex items-center space-x-3 text-[11px] font-mono" style="color: var(--text-muted)">
             <span class="font-bold text-blue-500">${sizeDisplay}</span>
             <span>•</span>
             <span>${articlesDisplay}</span>
           </div>
 
-          <button class="px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${isSelected ? 'text-red-500 hover:bg-red-500/10' : 'text-blue-500 hover:bg-blue-500/10'}">
-            ${isSelected ? 'Remove' : '+ Add to Library'}
-          </button>
+          <div class="flex items-center flex-wrap gap-1.5">
+            <a href="${getKiwixPackageUrl(pkg)}" target="_blank" rel="noopener noreferrer" class="btn-preview-kiwix-kb px-2 py-1 rounded-md text-[11px] font-semibold bg-emerald-600/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white flex items-center space-x-1 transition-all" title="Open ${pkg.name} in official Kiwix Library">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+              <span>Explore KB ↗</span>
+            </a>
+            <button type="button" class="btn-mark-installed px-2 py-1 rounded-md text-[11px] font-bold border transition-all flex items-center space-x-1 ${isInstalled ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 cursor-pointer hover:bg-emerald-500/25' : 'border-slate-500/40 text-slate-400 hover:border-emerald-500/40 hover:text-emerald-400 hover:bg-emerald-500/10'}" title="${isInstalled ? 'Marked as installed (click to remove)' : 'I have downloaded this — mark as installed'}">
+              ${isInstalled
+                ? `<svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg><span class="text-emerald-400 font-bold">Installed ✓</span>`
+                : `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg><span>Mark as Installed</span>`
+              }
+            </button>
+            <button type="button" class="btn-toggle-pkg px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${isSelected ? 'text-red-500 hover:bg-red-500/10' : 'text-blue-500 hover:bg-blue-500/10'}">
+              ${isSelected ? 'Remove' : '+ Add to Library'}
+            </button>
+          </div>
         </div>
       `;
+
+      // Explore KB: stop propagation only (anchor handles navigation)
+      const previewLink = card.querySelector('.btn-preview-kiwix-kb');
+      if (previewLink) {
+        previewLink.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      }
+
+      // Mark as Installed button
+      const markBtn = card.querySelector('.btn-mark-installed');
+      if (markBtn) {
+        markBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (state.installedPackages[pkg.id]) {
+            unmarkPackageInstalled(pkg.id);
+          } else {
+            markPackageInstalled(pkg);
+          }
+        });
+      }
 
       card.addEventListener('click', () => {
         togglePackageSelection(pkg.id);
@@ -1028,6 +1092,234 @@
     renderRecommendations();
     updateStorageMeter();
     saveStateToStorage();
+  }
+
+  // ==========================================
+  // 9B. OFFLINE LIBRARY — MARK AS INSTALLED
+  // ==========================================
+  function markPackageInstalled(pkg) {
+    state.installedPackages[pkg.id] = {
+      id: pkg.id,
+      name: pkg.name,
+      language: pkg.language,
+      sizeMB: pkg.sizeMB,
+      category: pkg.category,
+      categoryLabel: pkg.categoryLabel || pkg.category,
+      installedAt: new Date().toISOString()
+    };
+    saveStateToStorage();
+    renderRecommendations();     // re-render cards so button turns green
+    renderOfflineLibrary();      // update offline library section
+    showToast(`"${pkg.name}" marked as installed in your offline library!`, 'success');
+  }
+
+  function unmarkPackageInstalled(pkgId) {
+    if (state.installedPackages[pkgId]) {
+      const name = state.installedPackages[pkgId].name;
+      delete state.installedPackages[pkgId];
+      saveStateToStorage();
+      renderRecommendations();
+      renderOfflineLibrary();
+      showToast(`"${name}" removed from your offline library.`, 'info');
+    }
+  }
+
+  function renderOfflineLibrary() {
+    const section = DOM.offlineLibrarySection;
+    const list = DOM.offlineLibraryList;
+    const empty = DOM.offlineLibraryEmpty;
+    const countBadge = DOM.offlineLibraryCount;
+    if (!section || !list || !empty) return;
+
+    const entries = Object.values(state.installedPackages);
+    const count = entries.length;
+
+    // Update count badge
+    if (countBadge) {
+      countBadge.textContent = count;
+      countBadge.className = count > 0
+        ? 'inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-emerald-500 text-white'
+        : 'inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-slate-600/40 text-slate-400';
+    }
+
+    if (count === 0) {
+      list.classList.add('hidden');
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    empty.classList.add('hidden');
+    list.classList.remove('hidden');
+    list.innerHTML = '';
+
+    // Sort newest first
+    entries.sort((a, b) => new Date(b.installedAt) - new Date(a.installedAt));
+
+    entries.forEach(pkg => {
+      const sizeDisplay = pkg.sizeMB >= 1024 ? `${(pkg.sizeMB / 1024).toFixed(2)} GB` : `${pkg.sizeMB} MB`;
+      const installedDate = new Date(pkg.installedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+
+      const item = document.createElement('div');
+      item.className = 'flex items-center justify-between gap-3 p-3.5 rounded-xl border transition-all hover:border-emerald-500/30';
+      item.style.backgroundColor = 'var(--bg-surface-alt)';
+      item.style.borderColor = 'var(--border-color)';
+      item.setAttribute('data-installed-id', pkg.id);
+
+      item.innerHTML = `
+        <div class="flex items-center space-x-3 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </div>
+          <div class="min-w-0">
+            <p class="font-bold text-sm truncate" style="color: var(--text-primary)">${pkg.name}</p>
+            <div class="flex items-center space-x-2 text-[11px] mt-0.5" style="color: var(--text-muted)">
+              <span class="font-mono font-bold text-emerald-500">${sizeDisplay}</span>
+              <span>•</span>
+              <span class="font-mono uppercase">${pkg.language}</span>
+              <span>•</span>
+              <span>${pkg.categoryLabel || pkg.category}</span>
+              <span>•</span>
+              <span>Added ${installedDate}</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2 flex-shrink-0">
+          <a href="${getKiwixPackageUrl(pkg)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-600/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center space-x-1" title="Open ${pkg.name} in Kiwix Library">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            <span>Explore KB ↗</span>
+          </a>
+          <button class="btn-unmark-installed flex-shrink-0 px-2.5 py-1 rounded-md text-[11px] font-semibold border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all" data-pkg-id="${pkg.id}" title="Remove from offline library">
+            Remove
+          </button>
+        </div>
+      `;
+
+      const removeBtn = item.querySelector('.btn-unmark-installed');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+          unmarkPackageInstalled(pkg.id);
+        });
+      }
+
+      list.appendChild(item);
+    });
+  }
+
+  // ==========================================
+  // 9C. KIWIX ONLINE LIBRARY URL BUILDERS
+  // ==========================================
+  // 9C. KIWIX ONLINE LIBRARY DEEP-LINK BUILDERS (browse.library.kiwix.org)
+  // ==========================================
+  const KIWIX_BROWSE_BASE_URL = 'https://browse.library.kiwix.org/';
+
+  const LANG_MAP_3 = {
+    en: 'eng',
+    hi: 'hin',
+    es: 'spa',
+    fr: 'fra',
+    de: 'deu',
+    ar: 'ara',
+    zh: 'zho',
+    ru: 'rus',
+    pt: 'por',
+    it: 'ita',
+    bn: 'ben',
+    ja: 'jpn'
+  };
+
+  function to3LetterLang(code) {
+    if (!code) return 'eng';
+    const c = String(code).toLowerCase().trim();
+    if (c.length === 3) return c;
+    return LANG_MAP_3[c] || c;
+  }
+
+  function getKiwixPackageUrl(pkg) {
+    if (!pkg) return `${KIWIX_BROWSE_BASE_URL}#lang=eng&category=wikipedia`;
+    const lang3 = to3LetterLang(pkg.language);
+    const id = (pkg.id || '').toLowerCase();
+    const category = (pkg.category || '').toLowerCase();
+
+    // 1. Official Kiwix category filters (category=wikipedia, category=gutenberg, etc.)
+    if (id.includes('wikipedia') || category === 'wikipedia') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=wikipedia`;
+    }
+    if (id.includes('gutenberg') || category === 'gutenberg') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=gutenberg`;
+    }
+    if (id.includes('wikivoyage') || category === 'wikivoyage') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=wikivoyage`;
+    }
+    if (id.includes('ted') || category === 'ted') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=ted`;
+    }
+
+    // 2. Query-based packages (q=WikiMed, q=Swasthya, etc.)
+    let query = '';
+    if (id.includes('wikimed')) query = 'WikiMed';
+    else if (id.includes('swasthya')) query = 'Swasthya';
+    else if (id.includes('aapda')) query = 'Aapda';
+    else if (id.includes('disaster')) query = 'Disaster';
+    else if (id.includes('phet')) query = 'PhET';
+    else if (id.includes('khan')) query = 'Khan Academy';
+    else if (id.includes('devdocs')) query = 'DevDocs';
+    else if (id.includes('stackoverflow')) query = 'Stack Overflow';
+    else if (id.includes('history') || id.includes('itihas')) query = 'History';
+    else {
+      const parenMatch = (pkg.name || '').match(/\(([^)]+)\)/);
+      if (parenMatch && /^[a-zA-Z0-9_\s-]+$/.test(parenMatch[1].trim())) {
+        query = parenMatch[1].trim().split(' ')[0];
+      } else {
+        query = (pkg.name || '').split(/[\s-_]+/)[0] || pkg.id;
+      }
+    }
+
+    return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&q=${encodeURIComponent(query)}`;
+  }
+
+  function getGeneralKiwixLibraryUrl(langCode, filterCategory) {
+    const lang3 = to3LetterLang(langCode);
+    const cat = (filterCategory || state.filterCategory || 'all').toLowerCase();
+
+    if (cat === 'wikipedia') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=wikipedia`;
+    }
+    if (cat === 'gutenberg') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=gutenberg`;
+    }
+    if (cat === 'health') {
+      const q = lang3 === 'hin' ? 'Swasthya' : 'WikiMed';
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&q=${encodeURIComponent(q)}`;
+    }
+    if (cat === 'disaster') {
+      const q = lang3 === 'hin' ? 'Aapda' : 'Disaster';
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&q=${encodeURIComponent(q)}`;
+    }
+    if (cat === 'science') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&q=PhET`;
+    }
+    if (cat === 'tech') {
+      return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&q=DevDocs`;
+    }
+
+    // Default: category=wikipedia so Kiwix immediately displays rich results instead of "No result"
+    return `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=wikipedia`;
+  }
+
+  function updateKiwixLibraryLinks() {
+    const userLang = Array.from(state.selectedLanguages)[0] || 'en';
+    const targetUrl = getGeneralKiwixLibraryUrl(userLang, state.filterCategory);
+
+    if (DOM.btnOpenKiwixLibrary) {
+      DOM.btnOpenKiwixLibrary.href = targetUrl;
+    }
+    if (DOM.btnTopOpenKiwixLibrary) {
+      DOM.btnTopOpenKiwixLibrary.href = targetUrl;
+    }
+    const discoverBtns = document.querySelectorAll('.btn-discover-knowledge, #btn-discover-knowledge-step4, #btn-discover-knowledge-empty, #offline-library-add-more');
+    discoverBtns.forEach(btn => {
+      btn.href = targetUrl;
+    });
   }
 
   // ==========================================
@@ -1823,6 +2115,90 @@
   }
 
   // ==========================================
+  // 12B. OFFICIAL KIWIX ONLINE LIBRARY INTEGRATION (library.kiwix.org)
+  // ==========================================
+  function setupKiwixLibraryModal() {
+    // Top Nav and Step 4 header Kiwix buttons are native <a> links opening in a new tab.
+    // We intentionally do NOT attach openKiwixLibrary modal triggers to them so users browse directly in a real browser tab.
+
+    if (DOM.btnCloseKiwixLibrary) {
+      DOM.btnCloseKiwixLibrary.addEventListener('click', () => {
+        closeKiwixLibrary();
+      });
+    }
+
+    if (DOM.btnReloadKiwixIframe) {
+      DOM.btnReloadKiwixIframe.addEventListener('click', () => {
+        if (DOM.kiwixLibraryIframe) {
+          if (DOM.kiwixIframeSpinner) DOM.kiwixIframeSpinner.classList.remove('hidden');
+          DOM.kiwixLibraryIframe.src = DOM.kiwixLibraryIframe.src;
+        }
+      });
+    }
+
+    // Modal background click to close
+    if (DOM.modalKiwixLibrary) {
+      DOM.modalKiwixLibrary.addEventListener('click', (e) => {
+        if (e.target === DOM.modalKiwixLibrary) {
+          closeKiwixLibrary();
+        }
+      });
+    }
+
+    // Escape key closes modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && DOM.modalKiwixLibrary && !DOM.modalKiwixLibrary.classList.contains('hidden')) {
+        closeKiwixLibrary();
+      }
+    });
+
+    // Hide spinner once iframe loads
+    if (DOM.kiwixLibraryIframe) {
+      DOM.kiwixLibraryIframe.addEventListener('load', () => {
+        if (DOM.kiwixIframeSpinner) {
+          DOM.kiwixIframeSpinner.classList.add('hidden');
+        }
+      });
+    }
+
+    // Topic quick filters inside Kiwix Library modal
+    const filterBtns = document.querySelectorAll('.kiwix-kb-quick-filter');
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/40'));
+        btn.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/40');
+        const query = btn.getAttribute('data-query') || '';
+        const userLang = Array.from(state.selectedLanguages)[0] || 'en';
+        const lang3 = to3LetterLang(userLang);
+        let targetUrl = `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=wikipedia`;
+        if (query === 'wikimed') {
+          targetUrl = `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&q=${lang3 === 'hin' ? 'Swasthya' : 'WikiMed'}`;
+        } else if (query === 'gutenberg' || query === 'wikipedia') {
+          targetUrl = `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&category=${query}`;
+        } else if (query) {
+          targetUrl = `${KIWIX_BROWSE_BASE_URL}#lang=${encodeURIComponent(lang3)}&q=${encodeURIComponent(query)}`;
+        }
+        openKiwixLibrary(targetUrl);
+      });
+    });
+  }
+
+  function openKiwixLibrary(url = 'https://browse.library.kiwix.org/#lang=eng&category=wikipedia') {
+    if (!DOM.modalKiwixLibrary) return;
+    DOM.modalKiwixLibrary.classList.remove('hidden');
+    DOM.modalKiwixLibrary.style.display = 'flex';
+    if (DOM.kiwixIframeSpinner) DOM.kiwixIframeSpinner.classList.remove('hidden');
+    if (DOM.kiwixLibraryIframe) DOM.kiwixLibraryIframe.src = url;
+    if (DOM.kiwixIframeExternalLink) DOM.kiwixIframeExternalLink.href = url;
+  }
+
+  function closeKiwixLibrary() {
+    if (!DOM.modalKiwixLibrary) return;
+    DOM.modalKiwixLibrary.classList.add('hidden');
+    DOM.modalKiwixLibrary.style.display = 'none';
+  }
+
+  // ==========================================
   // 13. EXPORT CATALOG AS JSON
   // ==========================================
   function exportCatalogJson() {
@@ -2032,6 +2408,7 @@
         btn.classList.add('active-filter', 'bg-blue-600', 'text-white');
         state.filterCategory = btn.getAttribute('data-category');
         renderRecommendations();
+        updateKiwixLibraryLinks();
       });
     });
 
@@ -2050,6 +2427,7 @@
         }
       });
       renderRecommendations();
+      updateKiwixLibraryLinks();
     });
 
     DOM.btnBackStep4.addEventListener('click', () => goToStep(3));
@@ -2076,6 +2454,7 @@
     // Modals
     setupCustomZimModal();
     setupOfflineReaderModal();
+    setupKiwixLibraryModal();
   }
 
   // ==========================================
